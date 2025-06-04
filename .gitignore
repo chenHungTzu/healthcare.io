@@ -1,0 +1,42 @@
+# .gitignore for .NET + Terraform monorepo
+
+# .NET build outputs
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.vs/
+TestResults/
+
+# VSCode/IDE
+.vscode/
+.idea/
+*.swp
+*.DS_Store
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+debug.log
+.terraform.lock.hcl
+
+# Node/Angular (for UI)
+node_modules/
+dist/
+.env
+.env.*
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log
+
+# Others
+*.bak
+*.tmp

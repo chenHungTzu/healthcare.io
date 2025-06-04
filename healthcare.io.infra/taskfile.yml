@@ -1,0 +1,15 @@
+version: "3"
+tasks:
+  up:
+    cmds:
+      - terraform init -upgrade
+      - terraform fmt &&
+        terraform validate &&
+        terraform refresh  &&
+        terraform plan -lock=false
+      - terraform apply -auto-approve
+    desc: "建立雲端環境"
+  down:
+    cmds : 
+     - terraform destroy -auto-approve
+    desc: "關閉雲端環境"
