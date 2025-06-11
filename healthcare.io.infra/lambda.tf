@@ -65,10 +65,15 @@ resource "aws_iam_role_policy" "lambda_transcribe_custom_policy" {
         Effect = "Allow",
         Action = [
           "s3:GetObject",
-          "s3:PutObject"
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:ListBucket"
         ],
         Resource = [
-          "arn:aws:s3:::healthcare-io-audio/*",
+          aws_s3_bucket.audio.arn,
+          "${aws_s3_bucket.audio.arn}/*",
+          aws_s3_bucket.transcribe_result.arn,
+          "${aws_s3_bucket.transcribe_result.arn}/*"
         ]
       }
     ]
@@ -177,6 +182,8 @@ resource "aws_s3_bucket_notification" "transcribe_result_lambda_trigger" {
   lambda_function {
     lambda_function_arn = aws_lambda_function.transcribe_summary.arn
     events              = ["s3:ObjectCreated:*"]
+    filter_prefix       = "transcribe-result/"
+    filter_suffix       = ".json"
   }
   depends_on = [aws_lambda_permission.allow_s3_invoke_transcribe_summary]
 }
@@ -200,10 +207,13 @@ resource "aws_iam_role_policy" "lambda_summary_bedrock_policy" {
         Effect = "Allow",
         Action = [
           "s3:GetObject",
-          "s3:PutObject"
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:ListBucket"
         ],
         Resource = [
-          "arn:aws:s3:::healthcare-io-transcribe-result/*"
+          aws_s3_bucket.transcribe_result.arn,
+          "${aws_s3_bucket.transcribe_result.arn}/*"
         ]
       }
     ]

@@ -1,6 +1,7 @@
 version: "3"
 tasks:
   up:
+    internal: true
     cmds:
       - terraform init -upgrade
       - terraform fmt &&
@@ -10,6 +11,7 @@ tasks:
       - terraform apply -auto-approve
     desc: "建立雲端環境"
   down:
+    internal: true
     cmds : 
      - terraform destroy -auto-approve
     desc: "關閉雲端環境"

@@ -1,0 +1,26 @@
+version: "3"
+
+
+tasks:
+  deploy:
+    internal : true
+    cmds:
+      - aws ecr get-login-password --region {{.AWS_REGION}} | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.{{.AWS_REGION}}.amazonaws.com
+      - docker build --force-rm -t healthcaretranscriber .
+      - docker tag healthcaretranscriber:latest $ECR_TRANSCRIBE_URL:latest
+      - docker push $ECR_TRANSCRIBE_URL:latest
+      - AWS_PAGER=""  aws lambda update-function-code --function-name $LAMBDA_TRANSCRIBE_ARN --image-uri $ECR_TRANSCRIBE_URL:latest --region {{.AWS_REGION}}
+
+    desc: "[cloud] 打包Image並上傳到ECR"
+  upload-mock-speech:
+    internal : true
+    cmds:
+      - aws polly synthesize-speech
+        --output-format mp3
+        --region {{.AWS_REGION}}
+        --text-type ssml
+        --engine standard
+        --text file://src/healthcare.io.transcriber/mock-speech.ssml
+        --voice-id Joanna
+        mock-speech.wav
+    desc: "[cloud] 透過AWS Polly 下載 mock-speech"

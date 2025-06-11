@@ -1,0 +1,81 @@
+<speak xmlns="http://www.w3.org/2001/10/synthesis" version="1.0" xml:lang="en-US">
+
+  <!-- Patient: 高音 + 慢速 -->
+  <prosody pitch="+2st" rate="slow">
+    It’s been almost a month, but I still can’t believe my dad is gone.
+    He was everything to me... and now, it’s just empty.
+  </prosody>
+
+  <break time="1000ms"/>
+
+  <!-- Therapist: 低音 + 中速 -->
+  <prosody pitch="-6st" rate="medium">
+    I’m really sorry for your loss. Losing a parent can shake the foundation of your world.
+    Would you like to share what your relationship with him was like?
+  </prosody>
+
+  <break time="800ms"/>
+
+  <!-- Patient -->
+  <prosody pitch="+2st" rate="slow">
+    We were very close. He used to call me every night, no matter how busy he was.
+    Now the silence feels... unbearable.
+  </prosody>
+
+  <break time="800ms"/>
+
+  <!-- Therapist -->
+  <prosody pitch="-6st" rate="medium">
+    That nightly connection sounds like it meant a lot to you.
+    Grief often shows up in the quiet moments where love used to speak.
+  </prosody>
+
+  <break time="800ms"/>
+
+  <!-- Patient -->
+  <prosody pitch="+2st" rate="slow">
+    I keep replaying our last conversation, wishing I had said more.
+    He passed so suddenly... I didn’t get to say goodbye.
+  </prosody>
+
+  <break time="800ms"/>
+
+  <!-- Therapist -->
+  <prosody pitch="-6st" rate="medium">
+    Those regrets are very common when we lose someone unexpectedly.
+    It’s okay to hold space for both your love and your pain.
+  </prosody>
+
+  <break time="800ms"/>
+
+  <!-- Patient -->
+  <prosody pitch="+2st" rate="slow">
+    Everyone says time heals, but right now... it just feels worse each day.
+    I feel guilty for even laughing or feeling okay sometimes.
+  </prosody>
+
+  <break time="800ms"/>
+
+  <!-- Therapist -->
+  <prosody pitch="-6st" rate="medium">
+    Guilt during grief is natural. It's a sign of how deeply you cared.
+    Feeling okay doesn't mean you’ve forgotten him—it means you’re still living, and that’s okay too.
+  </prosody>
+
+  <break time="800ms"/>
+
+  <!-- Patient -->
+  <prosody pitch="+2st" rate="slow">
+    Thank you. It really helps to say this out loud.
+    I’ve been keeping everything inside for weeks.
+  </prosody>
+
+  <break time="800ms"/>
+
+  <!-- Therapist -->
+  <prosody pitch="-6st" rate="medium">
+    I’m here to hold that space with you.
+    You don’t have to carry all of it alone—we’ll keep working through this together, one step at a time.
+  </prosody>
+
+</speak>

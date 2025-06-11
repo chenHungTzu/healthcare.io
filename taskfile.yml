@@ -1,0 +1,40 @@
+version: "3"
+
+dotenv: [ "Taskfile.iac.env" ]
+
+vars:
+  AWS_REGION: ap-northeast-1
+
+includes:
+  infra:
+    taskfile: ./healthcare.io.infra/taskfile.yml
+    dir: ./healthcare.io.infra
+  transcriber:
+    taskfile: ./healthcare.io.transcriber/taskfile.yml
+    dir: ./healthcare.io.transcriber
+  transcribe-summary:
+    taskfile: ./healthcare.io.transcribe-summary/taskfile.yml
+    dir: ./healthcare.io.transcribe-summary
+
+
+tasks:
+  infra-up:
+    cmds:
+      - task: infra:up
+    desc: "[cloud] 啟動基礎設施"
+  infra-down:
+    cmds:
+      - task: infra:down
+    desc: "[cloud] 停止基礎設施"
+  upload-mock-speech:
+    cmds:
+      - task: transcriber:upload-mock-speech
+    desc: "[cloud] 上傳 mock-speech"
+  deploy-transcriber:
+    cmds:
+      - task: transcriber:deploy
+    desc: "[cloud] 打包Image並上傳到ECR (transcriber)"
+  deploy-summary:
+    cmds:
+      - task: transcribe-summary:deploy
+    desc: "[cloud] 打包Image並上傳到ECR (transcriber-summary)"

@@ -40,3 +40,5 @@ Thumbs.db
 # Others
 *.bak
 *.tmp
+
+Taskfile.iac.env
