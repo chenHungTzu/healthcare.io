@@ -26,9 +26,9 @@ tasks:
     cmds:
       - task: infra:down
     desc: "[cloud] 停止基礎設施"
-  upload-mock-speech:
+  download-mock-speech:
     cmds:
-      - task: transcriber:upload-mock-speech
+      - task: transcriber:download-mock-speech
     desc: "[cloud] 上傳 mock-speech"
   deploy-transcriber:
     cmds:

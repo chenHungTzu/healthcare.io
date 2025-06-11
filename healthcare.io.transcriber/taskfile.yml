@@ -12,7 +12,7 @@ tasks:
       - AWS_PAGER=""  aws lambda update-function-code --function-name $LAMBDA_TRANSCRIBE_ARN --image-uri $ECR_TRANSCRIBE_URL:latest --region {{.AWS_REGION}}
 
     desc: "[cloud] 打包Image並上傳到ECR"
-  upload-mock-speech:
+  download-mock-speech:
     internal : true
     cmds:
       - aws polly synthesize-speech
