@@ -124,31 +124,26 @@ public class Function
 
     private async Task<string> ProcessChunk(string content, int chunkIndex, int totalChunks)
     {
-        string promptAndInputText = string.Empty;
+        string promptAndInputText;
         if (totalChunks > 1)
         {
             promptAndInputText = $@"
-        
         你是一位具有執照的臨床心理師。以下是病患與治療者之間的心理治療對話逐字紀錄。你的任務是將片段的逐字稿摘要其內容：
 
         1. 仔細分析此對話，記錄病患的身心理狀況。
         2. 請以繁體中文作答。
 
         對話紀錄如下：
-        {"這是第({chunkIndex}/{totalChunks})份紀錄，內容為 : {content}"}
+        這是第{chunkIndex}/{totalChunks}份紀錄，內容為: {content}
 
         請依照以下結構化的 JSON 格式回覆：
         {{  
-            ""diagnosis_summary"": ""string（逐字稿摘要，適用於 EHR）"",
+            ""diagnosis_summary"": ""string（逐字稿摘要，適用於 EHR）""
         }}";
-
         }
         else
         {
-
-
             promptAndInputText = $@"
-        
         你是一位具有執照的臨床心理師。以下是病患與治療者之間的心理治療對話逐字紀錄。你的任務是：
 
         1. 仔細分析此對話，以理解病患的心理狀態、壓力程度與核心症狀。
@@ -165,19 +160,22 @@ public class Function
             ""diagnosis_summary"": ""string（臨床摘要，適用於 EHR）"",
             ""recommendations"": [""string"", ""string""]
         }}";
-
-
         }
 
 
         var requestBody = new
         {
-            inputText = promptAndInputText,
-            textGenerationConfig = new
+            anthropic_version = "bedrock-2023-05-31",
+            max_tokens = 2048,
+            temperature = 0.3,
+            top_p = 0.9,
+            messages = new[]
             {
-                maxTokenCount = 2048,
-                temperature = 0.3,
-                topP = 0.9
+            new
+            {
+                role = "user",
+                content = promptAndInputText
+            }
             }
         };
 
@@ -185,7 +183,7 @@ public class Function
 
         var request = new Amazon.BedrockRuntime.Model.InvokeModelRequest
         {
-            ModelId = "amazon.titan-text-express-v1",
+            ModelId = "anthropic.claude-3-5-sonnet-20240620-v1:0",
             Body = new MemoryStream(Encoding.UTF8.GetBytes(requestBodyJson)),
             ContentType = "application/json",
         };
@@ -223,12 +221,17 @@ public class Function
 
         var requestBody = new
         {
-            inputText = promptAndInputText,
-            textGenerationConfig = new
+            anthropic_version = "bedrock-2023-05-31",
+            max_tokens = 2048,
+            temperature = 0.3,
+            top_p = 0.9,
+            messages = new[]
             {
-                maxTokenCount = 2048,
-                temperature = 0.3,
-                topP = 0.9
+            new
+            {
+                role = "user",
+                content = promptAndInputText
+            }
             }
         };
 
@@ -236,9 +239,9 @@ public class Function
 
         var request = new Amazon.BedrockRuntime.Model.InvokeModelRequest
         {
-            ModelId = "amazon.titan-text-express-v1",
+            ModelId = "anthropic.claude-3-5-sonnet-20240620-v1:0",
             Body = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(requestBodyJson)),
-            ContentType = "application/json"
+            ContentType = "application/json",
         };
 
         var responseBody = await _amazonBedrock.InvokeModelAsync(request);
