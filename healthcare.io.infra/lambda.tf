@@ -168,6 +168,13 @@ resource "aws_lambda_function" "transcribe_summary" {
     create_before_destroy = true
   }
 
+  environment {
+    variables = {
+      KM_ID    = aws_bedrockagent_knowledge_base.healthcare_kb.id
+      KM_DS_ID = aws_bedrockagent_data_source.healthcare_summary_data_source.data_source_id
+    }
+  }
+
   depends_on = [aws_ecr_repository.summary_repo]
 }
 resource "aws_lambda_permission" "allow_s3_invoke_transcribe_summary" {
@@ -215,6 +222,16 @@ resource "aws_iam_role_policy" "lambda_summary_bedrock_policy" {
           aws_s3_bucket.transcribe_result.arn,
           "${aws_s3_bucket.transcribe_result.arn}/*"
         ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "bedrock:StartIngestionJob",
+          "bedrock:StartKnowledgeBaseSync",
+          "bedrock:GetKnowledgeBase",
+          "bedrock:ListKnowledgeBases"
+        ],
+        Resource = [aws_bedrockagent_knowledge_base.healthcare_kb.arn]
       }
     ]
   })

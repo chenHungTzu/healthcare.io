@@ -8,6 +8,7 @@
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.Core" Version="2.6.0" />
     <PackageReference Include="Amazon.Lambda.TestUtilities" Version="2.0.0" />
+    <PackageReference Include="AWSSDK.BedrockAgent" Version="4.0.3.5" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.5.0" />

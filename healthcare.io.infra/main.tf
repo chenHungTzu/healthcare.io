@@ -5,6 +5,10 @@ terraform {
       source  = "hashicorp/aws"
       version = ">= 5.0"
     }
+    awscc = {
+      source  = "hashicorp/awscc"
+      version = ">= 0.62.0"
+    }
   }
   backend "s3" {
     bucket         = "tf-bucket-0305"
@@ -13,10 +17,5 @@ terraform {
     dynamodb_table = "tflock"
   }
 }
-
-provider "aws" {
-  region = "ap-northeast-1"
-}
-
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}

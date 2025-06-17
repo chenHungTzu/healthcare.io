@@ -32,9 +32,11 @@ tasks:
     desc: "[cloud] 上傳 mock-speech"
   deploy-transcriber:
     cmds:
+      - dotnet build
       - task: transcriber:deploy
     desc: "[cloud] 打包Image並上傳到ECR (transcriber)"
   deploy-summary:
     cmds:
+      - dotnet build
       - task: transcribe-summary:deploy
     desc: "[cloud] 打包Image並上傳到ECR (transcriber-summary)"

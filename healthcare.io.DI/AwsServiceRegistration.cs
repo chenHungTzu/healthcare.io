@@ -1,4 +1,5 @@
-﻿using Amazon.Bedrock;
+﻿using Amazon.BedrockAgent;
+using Amazon.BedrockAgentRuntime;
 using Amazon.BedrockRuntime;
 using Amazon.S3;
 using Amazon.TranscribeService;
@@ -43,6 +44,17 @@ public static class AwsServiceRegistration
         {
             return new AmazonBedrockRuntimeClient(Amazon.RegionEndpoint.APNortheast1);
         });
+
+        services.AddSingleton<IAmazonBedrockAgentRuntime>(_ =>
+        {
+            return new AmazonBedrockAgentRuntimeClient(Amazon.RegionEndpoint.APNortheast1);
+        });
+
+        services.AddSingleton<IAmazonBedrockAgent>(_ =>
+        {
+            return new AmazonBedrockAgentClient(Amazon.RegionEndpoint.APNortheast1);
+        });
+
         #endregion
 
         return services;

@@ -1,90 +1,79 @@
 <speak xmlns="http://www.w3.org/2001/10/synthesis" version="1.0" xml:lang="en-US">
 
-  <!-- Patient: 高音 + 慢速 -->
-  <prosody pitch="+2st" rate="slow">
-    I don’t even know how to start…
-    They’re all gone.
-    My entire family… they were taken from me.
-    I was the only one who made it out.
+  <!-- Mary: 聲音壓抑、慢速 -->
+  <prosody pitch="-1st" rate="slow">
+    I thought I was ready for criticism…  
+    But not like this.  
+    I posted a video last week, and it went kind of viral.  
+    But then the comments started pouring in—  
+    So many of them were cruel.  
+    They picked apart my appearance, my voice… everything.
   </prosody>
 
   <break time="1200ms"/>
 
-  <!-- Therapist: 低音 + 中速 -->
-  <prosody pitch="-6st" rate="medium">
-    I’m so sorry. I can’t begin to imagine the weight of that loss.
-    This space is for you—whatever you need to say, however you need to feel—it’s safe here.
+  <!-- Therapist: 穩定而真誠 -->
+  <prosody pitch="-4st" rate="medium">
+    Mary… I’m so sorry you’re going through this.  
+    Online hate can feel deeply personal, even when it comes from strangers.  
+    What you’re experiencing is real—and it’s not your fault.
   </prosody>
 
   <break time="1000ms"/>
 
-  <!-- Patient -->
-  <prosody pitch="+2st" rate="slow">
-    I replay that day in my head every night.
-    The screams… the silence after.
-    I keep asking—why me?
-  </prosody>
-
-  <break time="1000ms"/>
-
-  <!-- Therapist -->
-  <prosody pitch="-6st" rate="medium">
-    Survivor’s guilt is a heavy burden.
-    But your life—your survival—matters.
-    We can carry that question together until you're ready to lay it down.
-  </prosody>
-
-  <break time="1000ms"/>
-
-  <!-- Patient -->
-  <prosody pitch="+2st" rate="slow">
-    I haven’t slept since.
-    I see their faces every time I close my eyes.
-    I feel like I’m trapped in that moment, like it never ended.
+  <!-- Mary -->
+  <prosody pitch="-1st" rate="slow">
+    I knew not everyone would like me, but…  
+    some of the things they said…  
+    I can’t get them out of my head.  
+    I keep reading them over and over, like I’m trying to punish myself.
   </prosody>
 
   <break time="1000ms"/>
 
   <!-- Therapist -->
-  <prosody pitch="-6st" rate="medium">
-    Trauma can freeze time.
-    That moment doesn’t define you—but I know it lives inside you.
-    We’ll work gently, piece by piece, to help you come back to now.
+  <prosody pitch="-4st" rate="medium">
+    That inner loop of self-blame can be so painful.  
+    But Mary, those comments say more about them than about you.  
+    You showed up. You shared something of yourself.  
+    That takes courage—not perfection.
   </prosody>
 
   <break time="1000ms"/>
 
-  <!-- Patient -->
-  <prosody pitch="+2st" rate="slow">
-    Everyone tells me to be strong.
-    But I’m just… tired.
-    Tired of pretending I’m okay.
-  </prosody>
-
-  <break time="1000ms"/>
-
-  <!-- Therapist -->
-  <prosody pitch="-6st" rate="medium">
-    You don’t have to be strong here.
-    You’re allowed to fall apart.
-    Healing begins when we stop pretending.
-  </prosody>
-
-  <break time="1000ms"/>
-
-  <!-- Patient -->
-  <prosody pitch="+2st" rate="slow">
-    This is the first time I’ve said all of this out loud.
-    I didn’t think I ever could.
+  <!-- Mary -->
+  <prosody pitch="-1st" rate="slow">
+    I’m starting to wonder if I should just quit.  
+    Delete everything.  
+    Maybe I was naive to think I could handle this space.
   </prosody>
 
   <break time="1000ms"/>
 
   <!-- Therapist -->
-  <prosody pitch="-6st" rate="medium">
-    And you did.
-    That takes courage.
-    I’m here to walk this path with you, for as long as you need.
+  <prosody pitch="-4st" rate="medium">
+    It’s okay to feel overwhelmed.  
+    But don’t let their cruelty drown out your voice.  
+    You started this for a reason, Mary—because you had something worth sharing.  
+    Let’s find a way to protect your peace without silencing your truth.
+  </prosody>
+
+  <break time="1000ms"/>
+
+  <!-- Mary -->
+  <prosody pitch="-1st" rate="slow">
+    I just want to feel safe again.  
+    To enjoy creating without fearing the backlash.
+  </prosody>
+
+  <break time="1000ms"/>
+
+  <!-- Therapist -->
+  <prosody pitch="-4st" rate="medium">
+    We can work toward that.  
+    Step by step, we’ll rebuild your sense of safety and boundaries.  
+    And when you’re ready—you’ll decide how your voice returns.  
+    But it will be on your terms.
   </prosody>
 
 </speak>
