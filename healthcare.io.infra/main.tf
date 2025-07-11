@@ -5,10 +5,7 @@ terraform {
       source  = "hashicorp/aws"
       version = ">= 5.0"
     }
-    awscc = {
-      source  = "hashicorp/awscc"
-      version = ">= 0.62.0"
-    }
+
   }
   backend "s3" {
     bucket         = "tf-bucket-0305"
@@ -19,3 +16,15 @@ terraform {
 }
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
+
+resource "null_resource" "ecr_login" {
+  provisioner "local-exec" {
+    command = <<EOF
+          aws ecr get-login-password --region ${data.aws_region.current.name} | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com
+          EOF
+  }
+
+  triggers = {
+    always_run = timestamp()
+  }
+}

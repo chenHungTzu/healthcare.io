@@ -63,8 +63,8 @@ public class Function
             {
                 MediaFileUri = mediaUri
             },
-            MediaFormat = Amazon.TranscribeService.MediaFormat.Wav, // 根據實際檔案格式調整       
-            LanguageCode = Amazon.TranscribeService.LanguageCode.EnUS, // 根據實際語言調整
+            MediaFormat = Amazon.TranscribeService.MediaFormat.Webm, // 根據實際檔案格式調整       
+            LanguageCode = Amazon.TranscribeService.LanguageCode.ZhTW, // 根據實際語言調整
             OutputBucketName = distinationBucketName, // 將轉錄結果輸出到同一個 S3 bucket
             OutputKey = $"transcribe-result/{DateTime.UtcNow:yyyyMMddHHmmss}/{objectKey}-{Guid.NewGuid()}.json", // 指定輸出檔案的 key
 

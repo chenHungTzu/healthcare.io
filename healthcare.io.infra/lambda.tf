@@ -3,11 +3,7 @@ resource "aws_ecr_repository" "transcribe_repo" {
   force_delete = true
   name         = "healthcare-io-transcribe"
 
-  provisioner "local-exec" {
-    command = <<EOF
-        aws ecr get-login-password --region ${data.aws_region.current.name} | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com
-        EOF
-  }
+
 
   provisioner "local-exec" {
     command = <<EOF
@@ -113,12 +109,6 @@ resource "aws_s3_bucket_notification" "audio_lambda_trigger" {
 resource "aws_ecr_repository" "summary_repo" {
   force_delete = true
   name         = "healthcare-io-transcribe-summary"
-
-  provisioner "local-exec" {
-    command = <<EOF
-        aws ecr get-login-password --region ${data.aws_region.current.name} | docker login --username AWS --password-stdin ${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com
-        EOF
-  }
 
   provisioner "local-exec" {
     command = <<EOF
