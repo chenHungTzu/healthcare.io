@@ -44,3 +44,4 @@ Thumbs.db
 Taskfile.iac.env
 
 *.wav
+ng-serve.log

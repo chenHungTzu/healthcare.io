@@ -6,6 +6,8 @@ terraform {
       version = ">= 5.0"
     }
 
+    awscc = {}
+
   }
   backend "s3" {
     bucket         = "tf-bucket-0305"

@@ -45,7 +45,6 @@ public class Function
         // var ans2 = await TestBedrockAgent(sessionId, "接下來的對話我該如何引導他讓他更正面？");
         // var ans3 = await TestBedrockAgent(sessionId, "jack過去經歷了幾次看診？然後分別對應 cpt_code 是多少？");
 
-
         // 處理 S3 事件
         await ProcessS3Event(evnt, context);
 

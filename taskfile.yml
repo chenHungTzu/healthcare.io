@@ -15,6 +15,9 @@ includes:
   transcribe-summary:
     taskfile: ./healthcare.io.transcribe-summary/taskfile.yml
     dir: ./healthcare.io.transcribe-summary
+  ui:
+    taskfile: ./healthcare.io.ui/taskfile.yml
+    dir: ./healthcare.io.ui
 
 
 tasks:
@@ -40,3 +43,11 @@ tasks:
       - dotnet build
       - task: transcribe-summary:deploy
     desc: "[cloud] 打包Image並上傳到ECR (transcriber-summary)"
+  local-frontend-run:
+    cmds:
+      - task: ui:local-run
+    desc: "[local] 執行angular 專案，並開啟 devtunnel 連線"
+  local-frontend-down:
+    cmds:
+      - task: ui:local-down
+    desc: "[local] 停止 angular 專案，並關閉 devtunnel 連線"
