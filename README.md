@@ -162,7 +162,7 @@ task local-frontend-run
 task download-mock-speech
 ```
 
-此功能透過 AWS Polly 讀取[模擬腳本](./healthcare.io.transcriber/src/healthcare.io.transcriber/mock-speech.ssml)並產出音檔，上傳至 S3 Bucket `healthcare-io-audio`，模擬完整的音訊處理流程。
+此功能透過 `AWS Polly` 讀取[模擬腳本](./healthcare.io.transcriber/src/healthcare.io.transcriber/mock-speech.ssml)並產出音檔，上傳至 S3 Bucket `healthcare-io-audio`，模擬完整的音訊處理流程。
 
 ### 5. 清理資源
 
