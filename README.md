@@ -130,7 +130,7 @@ task local-frontend-run
 
 ![AI 助理示範](./img/assistant-demo.png)
 
-8. (可選) 補上SDK 相關程式碼
+- 備註： SDK Invoke Agent 程式碼
 
 ```C#
     var response = await _amazonBedrockAgentRuntime.InvokeAgentAsync(new InvokeAgentRequest
