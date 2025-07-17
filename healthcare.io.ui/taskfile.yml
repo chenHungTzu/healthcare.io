@@ -4,12 +4,13 @@ tasks:
   local-run:
     internal: true
     cmds:
+      - npm install
       - nohup ng serve --port 4200 > ng-serve.log 2>&1 &
       - devtunnel host -p 4200 --allow-anonymous
     desc: "[local] 執行angular 專案，並開啟 devtunnel 連線"
   local-down:
     internal: true
     cmds:
-      - kill $(lsof -t -i:4200)
+      - kill $(lsof -t -i:4200) | true
       - devtunnel delete-all
     desc: "[local] 停止 angular 專案，並關閉 devtunnel 連線"
