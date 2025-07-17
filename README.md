@@ -1,4 +1,4 @@
-# Healthcare.io 
+# Healthcare.io
 
 ## 🔄 系統流程
 
@@ -39,24 +39,24 @@
 ```
 healthcare.io/
 ├── healthcare.io.ui/                   # Angular 前端應用
-│   ├── src/app/                        # Angular 組件和服務
-│   ├── src/environments/               # 環境配置檔案
-│   └── package.json                    # 前端依賴管理
+│   ├── src/app/                      
+│   ├── src/environments/            
+│   └── package.json              
 ├── healthcare.io.transcriber/          # 音訊轉錄 Lambda 函數
-│   ├── src/healthcare.io.transcriber/  # C# Lambda 源碼
-│   ├── Dockerfile                      # 容器化配置
-│   └── taskfile.yml                    # 建置和部署任務
+│   ├── src/healthcare.io.transcriber/  
+│   ├── Dockerfile                  
+│   └── taskfile.yml                  
 ├── healthcare.io.transcribe-summary/   # AI 分析與摘要 Lambda 函數
-│   ├── src/healthcare.io.transcribe-summary/ # C# Lambda 源碼
-│   ├── Dockerfile                      # 容器化配置
-│   └── taskfile.yml                    # 建置和部署任務
-├── healthcare.io.infra/               # Terraform 基礎設施即代碼
-│   ├── main.tf                        # 主要配置
-│   ├── cognito.tf                     # 身份驗證服務
-│   ├── lambda.tf                      # Lambda 函數配置
-│   ├── s3.tf                          # 存儲服務配置
-│   ├── kvs.tf                         # Kinesis Video Streams
-│   └── bedrock.tf                     # AI 服務配置
+│   ├── src/healthcare.io.transcribe-summary/  
+│   ├── Dockerfile                   
+│   └── taskfile.yml                 
+├── healthcare.io.infra/                # Terraform 基礎設施即代碼
+│   ├── main.tf                      
+│   ├── cognito.tf                   
+│   ├── lambda.tf                    
+│   ├── s3.tf                       
+│   ├── kvs.tf                       
+│   └── bedrock.tf                  
 ├── healthcare.io.DI/                  # 依賴注入共用庫
 └── taskfile.yml                       # 根目錄任務配置
 ```
@@ -129,6 +129,31 @@ task local-frontend-run
 7. 前往 AWS Bedrock Agent Console 進行 AI 問答測試
 
 ![AI 助理示範](./img/assistant-demo.png)
+   8. (可選) 補上SDK 相關程式碼
+
+```C#
+var response = await _amazonBedrockAgentRuntime.InvokeAgentAsync(new InvokeAgentRequest
+            {
+                AgentId = "AgentId",
+                AgentAliasId = "AgentAliasId",
+                SessionId = sessionId,
+                InputText = message
+            });
+
+            var sb = new StringBuilder();
+   
+            // 透過 response.Completion 取得資料
+            await foreach (var item in response.Completion)
+            {
+                if (item is Amazon.BedrockAgentRuntime.Model.PayloadPart payloadPart)
+                {
+                    var chunk = Encoding.UTF8.GetString(payloadPart.Bytes.ToArray());
+                    sb.Append(chunk);
+                }
+            }
+
+            return sb.ToString();
+```
 
 ### 4. 模擬音檔測試（可選）
 

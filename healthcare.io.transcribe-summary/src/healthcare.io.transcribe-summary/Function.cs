@@ -300,7 +300,6 @@ public class Function
 
             var sb = new StringBuilder();
      
-
             // 正確方式：透過 response.Completion 取得資料
             await foreach (var item in response.Completion)
             {
