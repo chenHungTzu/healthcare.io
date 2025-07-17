@@ -25,9 +25,8 @@
 4. **AI 分析與摘要**
 
    - 轉錄結果觸發 Transcribe-Summary Lambda 函數
-   - 呼叫 Amazon Bedrock API 進行智能分析
+   - 呼叫 Amazon Bedrock API 針對逐字稿進行整理，生成醫療摘要和見解
    - 觸發 Ingestion Job 將資料同步至 Amazon RDS
-   - 生成醫療摘要和見解
 5. **多管道問答服務**
 
    - 使用者可透過 AWS Bedrock Agent Console 查詢摘要與歷程
