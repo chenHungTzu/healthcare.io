@@ -30,9 +30,9 @@
    - 生成醫療摘要和見解
 5. **多管道問答服務**
 
-   - 透過 AWS Management Console 進行問答互動
-   - 支援其他系統透過 SDK 整合
-   - 基於歷史資料提供回覆
+   - 使用者可透過 AWS Bedrock Agent Console 查詢摘要與歷程
+   - 開發者可透過 SDK/API 整合問答服務
+   - 系統可基於過往病歷內容，提供語意理解與上下文建議，輔助醫師判斷
 
 ## 📦 專案結構
 
@@ -130,7 +130,7 @@ task local-frontend-run
 
 ![AI 助理示範](./img/assistant-demo.png)
 
-- 備註： SDK Invoke Agent 程式碼
+- 備註： SDK Invoke Agent 程式碼，供未來平台整合
 
 ```C#
     var response = await _amazonBedrockAgentRuntime.InvokeAgentAsync(new InvokeAgentRequest
