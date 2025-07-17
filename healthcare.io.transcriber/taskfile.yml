@@ -22,5 +22,5 @@ tasks:
         --engine standard
         --text file://src/healthcare.io.transcriber/mock-speech.ssml
         --voice-id Joanna
-        mock-speech.wav
+        mock-speech.webm
     desc: "[cloud] 透過AWS Polly 下載 mock-speech"
