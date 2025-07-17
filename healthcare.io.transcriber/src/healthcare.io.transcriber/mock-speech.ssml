@@ -1,7 +1,13 @@
 <speak xmlns="http://www.w3.org/2001/10/synthesis" version="1.0" xml:lang="en-US">
 
   <!-- Mary: 聲音壓抑、慢速 -->
+  <prosody pitch="-4st" rate="medium">
+    Hey , What's Your Name ? How are you?
+  </prosody>
+  
+  
   <prosody pitch="-1st" rate="slow">
+    Mary,
     I thought I was ready for criticism…  
     But not like this.  
     I posted a video last week, and it went kind of viral.  
