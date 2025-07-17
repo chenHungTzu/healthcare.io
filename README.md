@@ -32,7 +32,7 @@
 
    - 透過 AWS Management Console 進行問答互動
    - 支援其他系統透過 SDK 整合
-   - 基於歷史資料提供智能回覆
+   - 基於歷史資料提供回覆
 
 ## 📦 專案結構
 
@@ -126,33 +126,31 @@ task local-frontend-run
 4. 點擊「Start Viewer」按鈕啟動觀看端
 5. 確認視訊連線正常，開始進行通話
 6. 在 Master 端可以點擊「Start Recording」/「Stop Recording」按鈕進行錄音和上傳
-7. 前往 AWS Bedrock Agent Console 進行 AI 問答測試
+7. 資料同步完畢後，可前往 AWS Bedrock Agent Console 進行 AI 問答測試
 
 ![AI 助理示範](./img/assistant-demo.png)
-   8. (可選) 補上SDK 相關程式碼
+
+8. (可選) 補上SDK 相關程式碼
 
 ```C#
-var response = await _amazonBedrockAgentRuntime.InvokeAgentAsync(new InvokeAgentRequest
-            {
-                AgentId = "AgentId",
-                AgentAliasId = "AgentAliasId",
-                SessionId = sessionId,
-                InputText = message
-            });
-
-            var sb = new StringBuilder();
-   
-            // 透過 response.Completion 取得資料
-            await foreach (var item in response.Completion)
-            {
-                if (item is Amazon.BedrockAgentRuntime.Model.PayloadPart payloadPart)
-                {
-                    var chunk = Encoding.UTF8.GetString(payloadPart.Bytes.ToArray());
-                    sb.Append(chunk);
-                }
-            }
-
-            return sb.ToString();
+    var response = await _amazonBedrockAgentRuntime.InvokeAgentAsync(new InvokeAgentRequest
+    {
+        AgentId = "AgentId",
+        AgentAliasId = "AgentAliasId",
+        SessionId = sessionId,
+        InputText = message
+    })
+    var sb = new StringBuilder();
+    // 透過 response.Completion 取得資料
+    await foreach (var item in response.Completion)
+    {
+        if (item is Amazon.BedrockAgentRuntime.Model.PayloadPart payloadPart)
+        {
+            var chunk = Encoding.UTF8.GetString(payloadPart.Bytes.ToArray());
+            sb.Append(chunk);
+        }
+    }
+    return sb.ToString();
 ```
 
 ### 4. 模擬音檔測試（可選）
@@ -179,26 +177,3 @@ task infra-down
 ```
 
 **注意**: 請確保已正確配置 AWS 憑證和權限。詳細的基礎設施配置說明請參考 [infra 目錄](./healthcare.io.infra/)。
-
----
-
-## 📋 常用指令
-
-以下是專案中常用的 Task 指令：
-
-```bash
-# 基礎設施管理
-task infra-up          # 建置並部署基礎設施
-task infra-down        # 清理基礎設施資源
-
-# Lambda 函數部署
-task deploy-transcriber    # 部署轉錄 Lambda
-task deploy-summary       # 部署摘要 Lambda
-
-# 前端開發
-task local-frontend-run   # 啟動前端開發伺服器
-task local-frontend-down  # 停止前端服務
-
-# 測試工具
-task download-mock-speech # 下載模擬音檔進行測試
-```
