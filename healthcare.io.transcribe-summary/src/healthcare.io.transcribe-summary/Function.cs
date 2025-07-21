@@ -24,7 +24,7 @@ public class Function
     private readonly IAmazonBedrockAgent _amazonBedrockAgent;
 
     public Function(
-        IAmazonS3 s3Client,
+         IAmazonS3 s3Client,
          IAmazonBedrockRuntime amazonBedrock,
          IAmazonBedrockAgentRuntime amazonBedrockAgentRuntime,
          IAmazonBedrockAgent amazonBedrockAgent)

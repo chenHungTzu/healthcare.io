@@ -61,18 +61,24 @@ public class Function
             {
                 MediaFileUri = mediaUri
             },
-            MediaFormat = Amazon.TranscribeService.MediaFormat.Webm, // 根據實際檔案格式調整       
-            LanguageCode = Amazon.TranscribeService.LanguageCode.ZhTW, // 根據實際語言調整
-            OutputBucketName = distinationBucketName, // 將轉錄結果輸出到同一個 S3 bucket
+            // 自動多語言識別
+            IdentifyLanguage = true,
+            // 可選：限制語言識別範圍，提高準確度
+            LanguageOptions = new List<string>
+            {
+                "zh-TW", // 繁體中文       
+                "en-US", // 英文
+            },
+            MediaFormat = Amazon.TranscribeService.MediaFormat.Webm, // 根據實際檔案格式調整
+            OutputBucketName = distinationBucketName, // 將轉錄結果輸出到指定的 S3 bucket
             OutputKey = $"transcribe-result/{DateTime.UtcNow:yyyyMMddHHmmss}/{objectKey}-{Guid.NewGuid()}.json", // 指定輸出檔案的 key
-
             // Additional useful parameters for healthcare transcriptions
             Settings = new Amazon.TranscribeService.Model.Settings
             {
                 ShowSpeakerLabels = true, // 識別不同發言者
-                MaxSpeakerLabels = 2, // 預期醫生和病人
-                ShowAlternatives = true,
-                MaxAlternatives = 2
+                MaxSpeakerLabels = 2, // 預期醫生和病人（最多2個發言者）
+                ShowAlternatives = true, // 顯示替代轉錄結果
+                MaxAlternatives = 2 // 最多顯示2個替代結果
             },
         };
 

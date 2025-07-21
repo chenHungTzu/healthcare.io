@@ -24,6 +24,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{10BCE230-AA0
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "healthcare.io.transcribe-summary", "healthcare.io.transcribe-summary\src\healthcare.io.transcribe-summary\healthcare.io.transcribe-summary.csproj", "{2BF79D00-4F7B-4971-933D-27067298E0F4}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "healthcare.io.chatbot", "healthcare.io.chatbot", "{78035A30-D452-4B16-9937-2114A67CABC7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{98F2BDE7-5F01-4C73-BA91-F6EB49B1CD49}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "healthcare.io.chatbot", "healthcare.io.chatbot\src\healthcare.io.chatbot\healthcare.io.chatbot.csproj", "{B5EEC677-945F-4AEF-A60D-E4F0B4D2D113}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{B029F17A-BE0C-43C8-A76F-3449E6EF9E36}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "healthcare.io.chatbot.Tests", "healthcare.io.chatbot\test\healthcare.io.chatbot.Tests\healthcare.io.chatbot.Tests.csproj", "{52155AE6-0D89-46AF-B5CA-C112D3701B65}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +56,14 @@ Global
 		{2BF79D00-4F7B-4971-933D-27067298E0F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2BF79D00-4F7B-4971-933D-27067298E0F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2BF79D00-4F7B-4971-933D-27067298E0F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B5EEC677-945F-4AEF-A60D-E4F0B4D2D113}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5EEC677-945F-4AEF-A60D-E4F0B4D2D113}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5EEC677-945F-4AEF-A60D-E4F0B4D2D113}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5EEC677-945F-4AEF-A60D-E4F0B4D2D113}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52155AE6-0D89-46AF-B5CA-C112D3701B65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52155AE6-0D89-46AF-B5CA-C112D3701B65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52155AE6-0D89-46AF-B5CA-C112D3701B65}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52155AE6-0D89-46AF-B5CA-C112D3701B65}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -59,6 +77,10 @@ Global
 		{C54F400F-23FD-4F29-A77B-6D96FED79A69} = {7F2ECCCD-ACBB-44A1-A116-9D423E9538D6}
 		{10BCE230-AA0E-4687-89EB-FD5D07D35CF4} = {C54F400F-23FD-4F29-A77B-6D96FED79A69}
 		{2BF79D00-4F7B-4971-933D-27067298E0F4} = {10BCE230-AA0E-4687-89EB-FD5D07D35CF4}
+		{98F2BDE7-5F01-4C73-BA91-F6EB49B1CD49} = {78035A30-D452-4B16-9937-2114A67CABC7}
+		{B5EEC677-945F-4AEF-A60D-E4F0B4D2D113} = {98F2BDE7-5F01-4C73-BA91-F6EB49B1CD49}
+		{B029F17A-BE0C-43C8-A76F-3449E6EF9E36} = {78035A30-D452-4B16-9937-2114A67CABC7}
+		{52155AE6-0D89-46AF-B5CA-C112D3701B65} = {B029F17A-BE0C-43C8-A76F-3449E6EF9E36}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F2E404BC-B97B-49A6-BABD-EC5B1972DA4D}

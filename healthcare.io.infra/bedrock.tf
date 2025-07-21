@@ -345,6 +345,11 @@ resource "aws_bedrockagent_agent_alias" "healthcare_assistant_alias" {
   agent_alias_name = "healthcare-assistant-alias"
   agent_id         = aws_bedrockagent_agent.healthcare_assistant.agent_id
   description      = "Alias for the healthcare doctor agent"
+  depends_on = [
+    aws_bedrockagent_knowledge_base.healthcare_kb,
+    aws_bedrockagent_agent.healthcare_assistant,
+    aws_bedrockagent_agent_knowledge_base_association.healthcare_kb_association
+  ]
 
 }
 

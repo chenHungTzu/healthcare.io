@@ -1,85 +1,85 @@
-<speak xmlns="http://www.w3.org/2001/10/synthesis" version="1.0" xml:lang="en-US">
+<speak xmlns="http://www.w3.org/2001/10/synthesis" version="1.0" xml:lang="zh-TW">
 
   <!-- Mary: 聲音壓抑、慢速 -->
   <prosody pitch="-4st" rate="medium">
-    Hey , What's Your Name ? How are you?
+    嗨，你叫什麼名字？你還好嗎？
   </prosody>
   
-  
   <prosody pitch="-1st" rate="slow">
-    Mary,
-    I thought I was ready for criticism…  
-    But not like this.  
-    I posted a video last week, and it went kind of viral.  
-    But then the comments started pouring in—  
-    So many of them were cruel.  
-    They picked apart my appearance, my voice… everything.
+    我叫 Mary。  
+    我以為我已經準備好面對批評了……  
+    但不是這樣的。  
+    我上週發了一支影片，結果有點爆紅了。  
+    但之後評論接踵而至——  
+    好多留言都很惡毒。  
+    他們批評我的外表、我的聲音……什麼都不放過。
   </prosody>
 
   <break time="1200ms"/>
 
   <!-- Therapist: 穩定而真誠 -->
   <prosody pitch="-4st" rate="medium">
-    Mary… I’m so sorry you’re going through this.  
-    Online hate can feel deeply personal, even when it comes from strangers.  
-    What you’re experiencing is real—and it’s not your fault.
+    Mary……我很遺憾你正在經歷這些事。  
+    網路上的仇恨，即使來自陌生人，也會讓人感到非常受傷。  
+    你正在經歷的感受是真實的——而且，這不是你的錯。
   </prosody>
 
   <break time="1000ms"/>
 
   <!-- Mary -->
   <prosody pitch="-1st" rate="slow">
-    I knew not everyone would like me, but…  
-    some of the things they said…  
-    I can’t get them out of my head.  
-    I keep reading them over and over, like I’m trying to punish myself.
+    我知道不可能每個人都會喜歡我，但是……  
+    他們說的那些話……  
+    我腦子裡一直揮之不去。  
+    我不停地重複看那些留言，好像故意在懲罰自己。
   </prosody>
 
   <break time="1000ms"/>
 
   <!-- Therapist -->
   <prosody pitch="-4st" rate="medium">
-    That inner loop of self-blame can be so painful.  
-    But Mary, those comments say more about them than about you.  
-    You showed up. You shared something of yourself.  
-    That takes courage—not perfection.
+    那種內心不斷責怪自己的聲音真的很折磨人。  
+    但 Mary，那些留言其實更反映的是他們，而不是你。  
+    你願意站出來，分享自己的一部分，  
+    那需要的是勇氣——而不是完美。
   </prosody>
 
   <break time="1000ms"/>
 
   <!-- Mary -->
   <prosody pitch="-1st" rate="slow">
-    I’m starting to wonder if I should just quit.  
-    Delete everything.  
-    Maybe I was naive to think I could handle this space.
+    我開始懷疑自己是不是該放棄。  
+    把一切都刪掉。  
+    也許我太天真了，才以為自己能夠承受這一切。
   </prosody>
 
   <break time="1000ms"/>
 
   <!-- Therapist -->
   <prosody pitch="-4st" rate="medium">
-    It’s okay to feel overwhelmed.  
-    But don’t let their cruelty drown out your voice.  
-    You started this for a reason, Mary—because you had something worth sharing.  
-    Let’s find a way to protect your peace without silencing your truth.
+    感到崩潰是很正常的事。  
+    但不要讓他們的惡意蓋過你的聲音。  
+    Mary，你當初開始這一切，是因為你有值得分享的東西。  
+    我們可以一起找方法保護你的平靜，同時不讓你沉默。
   </prosody>
 
   <break time="1000ms"/>
 
   <!-- Mary -->
   <prosody pitch="-1st" rate="slow">
-    I just want to feel safe again.  
-    To enjoy creating without fearing the backlash.
+    我只希望能重新感到安全。  
+    希望能在創作中找回快樂，不再害怕那些攻擊。
   </prosody>
 
   <break time="1000ms"/>
 
   <!-- Therapist -->
   <prosody pitch="-4st" rate="medium">
-    We can work toward that.  
-    Step by step, we’ll rebuild your sense of safety and boundaries.  
-    And when you’re ready—you’ll decide how your voice returns.  
-    But it will be on your terms.
+    我們可以一起努力朝那個方向前進。  
+    一步一步，重建你的安全感和界線。  
+    當你準備好了——  
+    你會決定如何重新讓自己的聲音出現，  
+    而且，那會是你自己的選擇。
   </prosody>
 
 </speak>
