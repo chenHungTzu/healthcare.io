@@ -4,7 +4,7 @@
 
 工作流程如下：
 
-![系統架構流程圖](./img/flow.jpeg)
+![系統架構流程圖](./img/flow.png)
 
 ### 主要處理流程
 
@@ -27,45 +27,50 @@
    - 轉錄結果觸發 Transcribe-Summary Lambda 函數
    - 呼叫 Amazon Bedrock API 針對逐字稿進行整理，生成醫療摘要和見解
    - 觸發 Ingestion Job 將資料同步至 Amazon RDS
-5. **多管道問答服務**
+5. **問答服務**
 
-   - 使用者可透過 AWS Bedrock Agent Console 查詢摘要與歷程
-   - 開發者可透過 SDK/API 整合問答服務
+   - 整合 ApiGateway + Lambda 執行 AI Agent 進行回答
    - 系統可基於過往病歷內容，提供語意理解與上下文建議，輔助醫師判斷
 
 ## 📦 專案結構
 
 ```
 healthcare.io/
+├── healthcare.io.chatbot/              # 聊天機器人 Lambda 函數
+│   ├── src/healthcare.io.chatbot/  
+│   ├── Dockerfile  
+│   └── taskfile.yml  
 ├── healthcare.io.ui/                   # Angular 前端應用
-│   ├── src/app/                      
-│   ├── src/environments/            
-│   └── package.json              
+│   ├── src/app/  
+│   ├── src/environments/  
+│   └── package.json  
 ├── healthcare.io.transcriber/          # 音訊轉錄 Lambda 函數
 │   ├── src/healthcare.io.transcriber/  
-│   ├── Dockerfile                  
-│   └── taskfile.yml                  
+│   ├── Dockerfile  
+│   └── taskfile.yml  
 ├── healthcare.io.transcribe-summary/   # AI 分析與摘要 Lambda 函數
 │   ├── src/healthcare.io.transcribe-summary/  
-│   ├── Dockerfile                   
-│   └── taskfile.yml                 
+│   ├── Dockerfile   
+│   └── taskfile.yml   
 ├── healthcare.io.infra/                # Terraform 基礎設施即代碼
-│   ├── main.tf                      
-│   ├── cognito.tf                   
-│   ├── lambda.tf                    
-│   ├── s3.tf                       
-│   ├── kvs.tf                       
-│   └── bedrock.tf                  
-├── healthcare.io.DI/                  # 依賴注入共用庫
-└── taskfile.yml                       # 根目錄任務配置
+│   ├── agw.tf  
+│   ├── main.tf  
+│   ├── cognito.tf   
+│   ├── lambda.tf  
+│   ├── s3.tf   
+│   ├── kvs.tf   
+│   └── bedrock.tf  
+├── healthcare.io.DI/                   # 依賴注入共用庫
+└── taskfile.yml                        # 根目錄任務配置
 ```
 
 ### 各組件說明
 
-- **healthcare.io.ui**: Angular 前端應用，提供 WebRTC 視訊通話介面
-- **healthcare.io.transcriber**: 處理音訊轉錄的 Lambda 函數
-- **healthcare.io.transcribe-summary**: 進行 AI 分析與知識庫同步的 Lambda 函數
-- **healthcare.io.infra**: 使用 Terraform 管理的 AWS 基礎設施配置
+- **healthcare.io.ui**：提供 WebRTC 視訊通話介面
+- **healthcare.io.transcriber**：處理音訊轉錄的 Lambda 函數
+- **healthcare.io.transcribe-summary**：進行 AI 分析與知識庫同步的 Lambda 函數
+- **healthcare.io.chatbot**：轉呼叫 AI Agent 處理使用者回應
+- **healthcare.io.infra**：使用 Terraform 管理的 AWS 基礎設施配置
 
 ## 🚀 快速開始
 
@@ -88,14 +93,14 @@ healthcare.io/
 
 ### 部署步驟
 
-### 1. 複製專案並進入目錄
+#### 1. 複製專案並進入目錄
 
 ```bash
 git clone <repository-url>
 cd healthcare.io
 ```
 
-### 2. 部署 AWS 基礎設施和服務
+#### 2. 部署 AWS 基礎設施和服務
 
 ```bash
 # 建置基礎設施
@@ -107,11 +112,14 @@ task deploy-transcriber
 # 部署 AI 分析摘要 Lambda 函數
 task deploy-summary
 
+# 部署 助理聊天機器人
+task deploy-chatbot
+
 # 啟動前端開發伺服器
 task local-frontend-run
 ```
 
-### 3. 測試系統功能
+#### 3. 測試系統功能
 
 應用程式將透過 `Devtunnel` 代理啟動，如下圖所示：
 
@@ -120,39 +128,22 @@ task local-frontend-run
 **測試步驟：**
 
 1. 從裝置透過瀏覽器輸入網址（如範例：`https://7sw5rpg7-4200.asse.devtunnels.ms`）
+
+   - 起始畫面如下
+     ![起始畫面](./img/init.png)
 2. 點擊「Start Master」按鈕啟動主控端
 3. 從另一台裝置的瀏覽器輸入相同網址
 4. 點擊「Start Viewer」按鈕啟動觀看端
 5. 確認視訊連線正常，開始進行通話
 6. 在 Master 端可以點擊「Start Recording」/「Stop Recording」按鈕進行錄音和上傳
-7. 資料同步完畢後，可前往 AWS Bedrock Agent Console 進行 AI 問答測試
+7. 資料同步完畢後，可按下右下角「聊天按鈕」進行討論或往 AWS Bedrock Agent Console 進行 AI 問答測試
+   >上下文同步需要等 IngestJob 執行完畢，可能需要一點時間
 
-![AI 助理示範](./img/assistant-demo.png)
+   - Chat Call API![AI 助理示範 - Call API](./img/chat.png)
+   - 或是至 AWS Bedrock Agent Console 詢問
+     ![AI 助理示範 - AWS Bedrock Agent Console](./img/assistant-demo.png)
 
-- 備註： SDK Invoke Agent 程式碼，供未來平台整合
-
-```C#
-    var response = await _amazonBedrockAgentRuntime.InvokeAgentAsync(new InvokeAgentRequest
-    {
-        AgentId = "AgentId",
-        AgentAliasId = "AgentAliasId",
-        SessionId = sessionId,
-        InputText = message
-    })
-    var sb = new StringBuilder();
-    // 透過 response.Completion 取得資料
-    await foreach (var item in response.Completion)
-    {
-        if (item is Amazon.BedrockAgentRuntime.Model.PayloadPart payloadPart)
-        {
-            var chunk = Encoding.UTF8.GetString(payloadPart.Bytes.ToArray());
-            sb.Append(chunk);
-        }
-    }
-    return sb.ToString();
-```
-
-### 4. 模擬音檔測試（可選）
+#### 4. 模擬音檔測試（可選）
 
 如需要模擬音檔進行測試，可執行以下指令：
 
@@ -163,7 +154,7 @@ task download-mock-speech
 
 此功能透過 `AWS Polly` 讀取[模擬腳本](./healthcare.io.transcriber/src/healthcare.io.transcriber/mock-speech.ssml)並產出音檔，上傳至 S3 Bucket `healthcare-io-audio`，模擬完整的音訊處理流程。
 
-### 5. 清理資源
+#### 5. 清理資源
 
 測試完畢後，請執行以下指令清理資源：
 
@@ -175,4 +166,10 @@ task local-frontend-down
 task infra-down
 ```
 
-**注意**: 請確保已正確配置 AWS 憑證和權限。詳細的基礎設施配置說明請參考 [infra 目錄](./healthcare.io.infra/)。
+> **注意**：請確保已正確配置 AWS 憑證和權限。詳細的基礎設施配置說明請參考 [infra 目錄](./healthcare.io.infra/)。
+
+## ⚠️ 重要安全聲明
+
+> **警告**：目前為概念驗證，**尚未配置 PHI (Protected Health Information) 和 HIPAA 相關的安全保護措施**。
+>
+> **請勿直接用於處理真實的醫療資料或部署至生產環境**。
