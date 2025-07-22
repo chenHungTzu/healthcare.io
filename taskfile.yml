@@ -15,6 +15,9 @@ includes:
   transcribe-summary:
     taskfile: ./healthcare.io.transcribe-summary/taskfile.yml
     dir: ./healthcare.io.transcribe-summary
+  chatbot:
+    taskfile: ./healthcare.io.chatbot/taskfile.yml
+    dir: ./healthcare.io.chatbot
   ui:
     taskfile: ./healthcare.io.ui/taskfile.yml
     dir: ./healthcare.io.ui
@@ -32,7 +35,7 @@ tasks:
   download-mock-speech:
     cmds:
       - task: transcriber:download-mock-speech
-    desc: "[cloud] 上傳 mock-speech"
+    desc: "[cloud] 透過AWS Polly下載模擬音檔"
   deploy-transcriber:
     cmds:
       - dotnet build
@@ -43,6 +46,11 @@ tasks:
       - dotnet build
       - task: transcribe-summary:deploy
     desc: "[cloud] 打包Image並上傳到ECR (transcriber-summary)"
+  deploy-chatbot:
+    cmds:
+      - dotnet build
+      - task: chatbot:deploy
+    desc: "[cloud] 打包Image並上傳到ECR (chatbot)"
   local-frontend-run:
     cmds:
       - task: ui:local-run

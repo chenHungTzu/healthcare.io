@@ -4,4 +4,5 @@ export const base = {
   kvs_role_arn:  "_",
   region:  "_",
   audioBucketName:  "_",
+  chatUrl : "_",
 };

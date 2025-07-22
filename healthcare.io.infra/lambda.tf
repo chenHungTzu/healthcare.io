@@ -226,3 +226,84 @@ resource "aws_iam_role_policy" "lambda_summary_bedrock_policy" {
     ]
   })
 }
+
+# chatbot
+resource "aws_ecr_repository" "chatbot_repo" {
+  force_delete = true
+  name         = "healthcare-io-chatbot"
+
+  provisioner "local-exec" {
+    command = <<EOF
+      docker pull alpine
+      EOF
+  }
+
+  provisioner "local-exec" {
+    command = <<EOF
+      docker tag alpine ${self.repository_url}:latest
+      EOF
+  }
+
+  provisioner "local-exec" {
+    command = <<EOF
+      docker push ${self.repository_url}:latest
+      EOF
+  }
+}
+resource "aws_iam_role" "lambda_chatbot_role" {
+  name = "healthcare-io-chatbot-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+    }]
+  })
+}
+resource "aws_iam_role_policy_attachment" "lambda_chatbot_policy" {
+  role       = aws_iam_role.lambda_chatbot_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+resource "aws_lambda_function" "chatbot" {
+  function_name = "healthcare-io-chatbot"
+  role          = aws_iam_role.lambda_chatbot_role.arn
+  package_type  = "Image"
+  image_uri     = "${aws_ecr_repository.chatbot_repo.repository_url}:latest"
+  timeout       = 300
+  memory_size   = 512
+  architectures = ["arm64"]
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  environment {
+    variables = {
+      AGENT_ID       = aws_bedrockagent_agent.healthcare_assistant.agent_id
+      AGENT_ALIAS_ID = aws_bedrockagent_agent_alias.healthcare_assistant_alias.agent_alias_id
+    }
+  }
+
+  depends_on = [aws_ecr_repository.chatbot_repo]
+}
+resource "aws_iam_role_policy" "lambda_chatbot_policy" {
+  name = "healthcare-io-chatbot-bedrock-policy"
+  role = aws_iam_role.lambda_chatbot_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "bedrock:InvokeAgent",
+          "bedrock:ListAgents",
+          "bedrock:ListAgentAliases"
+        ],
+        Resource = "*"
+      },
+    ]
+  })
+}

@@ -1,5 +1,4 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
 import { environment } from '../environments/environment';
 import { CognitoIdentityClient, GetIdCommand, GetOpenIdTokenCommand } from '@aws-sdk/client-cognito-identity';
 import { STSClient, AssumeRoleWithWebIdentityCommand } from '@aws-sdk/client-sts';
@@ -8,28 +7,45 @@ import { KinesisVideoClient, GetSignalingChannelEndpointCommand } from '@aws-sdk
 import { KinesisVideoSignalingClient, GetIceServerConfigCommand } from '@aws-sdk/client-kinesis-video-signaling';
 import { Role } from './kvsRole';
 import { AwsConfig } from './aws.config';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ChatMessage } from './chatMessage';
+
 const KVSWebRTC = (window as any).KVSWebRTC;
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [DatePipe, FormsModule, HttpClientModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
   @ViewChild("remoteView", { static: true }) remoteView: ElementRef = new ElementRef(null);
+  @ViewChild("localView", { static: true }) localView: ElementRef = new ElementRef(null);
 
   localStream!: MediaStream;
   remoteStream!: MediaStream;
   mediaRecorder!: MediaRecorder;
   recordedChunks: Blob[] = [];
 
-  title = 'webrtc';
   mode: 'init' | 'master' | 'viewer' = 'init';
   isRecording = false;
   isUploading = false;
+  sessionId = '';
+  isChatOpen = false;
+  currentMessage = '';
+  chatMessages: ChatMessage[] = [];
+  isLoadingMessage = false;
+  constructor(private http: HttpClient) {
+    // 初始化 sessionId
+    this.sessionId = this.generateSessionId();
+  }
 
+  private generateSessionId(): string {
+    return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  }
   /**
    * 取得 AWS 設定（動態取得臨時憑證）
    * @returns
@@ -174,6 +190,10 @@ export class AppComponent {
         video: { width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: true,
       });
+
+      this.localView.nativeElement.srcObject = viewerStream;
+      this.localStream = viewerStream;
+
       viewerStream.getTracks().forEach(track => peerConnection.addTrack(track, viewerStream));
       await peerConnection.setLocalDescription(await peerConnection.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true }));
       signalingClient.sendSdpOffer(peerConnection.localDescription as RTCSessionDescription);
@@ -214,6 +234,8 @@ export class AppComponent {
         video: { width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: true,
       });
+      // 顯示本地視訊
+      this.localView.nativeElement.srcObject = this.localStream;
       this.localStream.getTracks().forEach(track => peerConnection.addTrack(track, this.localStream));
     });
     signalingClient.on('sdpOffer', async (offer, remoteClientId) => {
@@ -329,4 +351,102 @@ export class AppComponent {
       this.isUploading = false;
     }
   }
+
+  /**
+ * 切換聊天室顯示狀態
+ */
+  toggleChat() {
+    this.isChatOpen = !this.isChatOpen;
+  }
+
+  /**
+   * 發送聊天訊息
+   */
+  async sendMessage() {
+    if (!this.currentMessage.trim() || this.isLoadingMessage) return;
+
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      text: this.currentMessage,
+      isUser: true,
+      timestamp: new Date()
+    };
+
+    this.chatMessages.push(userMessage);
+    const messageToSend = this.currentMessage;
+    this.currentMessage = '';
+    this.isLoadingMessage = true;
+
+    try {
+      // 調用 API Gateway 聊天 API
+      const response = await this.http.post(environment.chatUrl, {
+        Message: messageToSend,
+        SessionId: this.sessionId
+      }, {
+        responseType: 'text' // 指定回應類型為文字
+      }).toPromise();
+
+
+      const aiMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        text: response || '抱歉，我暫時無法回應。',
+        isUser: false,
+        timestamp: new Date()
+      };
+
+
+
+      this.chatMessages.push(aiMessage);
+    } catch (error) {
+      console.error('發送訊息失敗:', error);
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        text: '抱歉，發送訊息時發生錯誤，請稍後再試。',
+        isUser: false,
+        timestamp: new Date()
+      };
+      this.chatMessages.push(errorMessage);
+    } finally {
+      this.isLoadingMessage = false;
+      // 滾動到聊天室底部
+      setTimeout(() => this.scrollToBottom(), 100);
+    }
+  }
+
+  /**
+   * 處理 Enter 鍵發送訊息
+   */
+  onKeyPress(event: KeyboardEvent) {
+    // 檢查是否為輸入法組字狀態
+    if (event.isComposing || event.keyCode === 229) {
+      return; // 如果正在組字，不處理
+    }
+
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      this.sendMessage();
+      this.scrollToBottom();
+    }
+  }
+
+  /**
+   * 滾動聊天室到底部
+   */
+  private scrollToBottom() {
+    const chatContainer = document.querySelector('.chat-messages');
+    if (chatContainer) {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+  }
+
+  /**
+   * 清除聊天記錄
+   */
+  clearChat() {
+    this.chatMessages = [];
+    this.sessionId = this.generateSessionId();
+  }
 }
+
+
+

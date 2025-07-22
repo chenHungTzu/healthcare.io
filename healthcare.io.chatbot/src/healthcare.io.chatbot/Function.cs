@@ -39,15 +39,14 @@ namespace healthcare.io.chatbot
                     AgentId = Environment.GetEnvironmentVariable("AGENT_ID"),
                     AgentAliasId = Environment.GetEnvironmentVariable("AGENT_ALIAS_ID"),
                     SessionId = sessionId,
-                    InputText = message
+                    InputText = message,
                 });
 
                 var sb = new StringBuilder();
 
-                // 透過 SSE 格式回應
                 await foreach (var item in response.Completion)
                 {
-                    if (item is Amazon.BedrockAgentRuntime.Model.PayloadPart payloadPart)
+                    if (item is PayloadPart payloadPart)
                     {
                         var chunk = Encoding.UTF8.GetString(payloadPart.Bytes.ToArray());
                         sb.AppendLine(chunk);
@@ -57,13 +56,6 @@ namespace healthcare.io.chatbot
                 return new APIGatewayProxyResponse
                 {
                     StatusCode = 200,
-                    Headers = new Dictionary<string, string>
-                    {
-                        { "Cache-Control", "no-cache" },
-                        { "Connection", "keep-alive" },
-                        { "Access-Control-Allow-Origin", "*" },
-                        { "Access-Control-Allow-Headers", "Content-Type" }
-                    },
                     Body = sb.ToString()
                 };
             }

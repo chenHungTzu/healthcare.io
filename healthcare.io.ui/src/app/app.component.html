@@ -1,5 +1,82 @@
-<!-- <video id="localView" #localView autoplay style="width: 300px; display: inline-block;"></video> -->
-<video id="remoteView" #remoteView autoplay></video>
+<div class="video-container">
+  <video id="remoteView" #remoteView autoplay class="video-player"></video>
+
+
+  <!-- 添加本地視訊畫面 -->
+  <video id="localView" #localView autoplay muted class="local-video"></video>
+
+  <!-- 聊天按鈕 -->
+  <div class="chat-toggle-btn" (click)="toggleChat()" [class.active]="isChatOpen">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" stroke="white"
+        stroke-width="2" fill="none" />
+      <circle cx="8" cy="10" r="1" fill="white" />
+      <circle cx="12" cy="10" r="1" fill="white" />
+      <circle cx="16" cy="10" r="1" fill="white" />
+    </svg>
+  </div>
+
+  <!-- 聊天室 -->
+  @if(isChatOpen) {
+  <div class="chat-panel">
+    <div class="chat-header">
+      <h3>AI 醫療助理</h3>
+      <div class="chat-actions">
+        <button class="clear-btn" (click)="clearChat()" title="清除聊天記錄">
+          🗑️
+        </button>
+        <button class="close-btn" (click)="toggleChat()" title="關閉聊天室">
+          ✕
+        </button>
+      </div>
+    </div>
+
+    <div class="chat-messages">
+      @if(chatMessages.length === 0) {
+      <div class="welcome-message">
+        👋 您好！我是您的 AI 醫療助理，有什麼我可以幫助您的嗎？
+      </div>
+      }
+
+      @for(message of chatMessages; track message.id) {
+      <div class="message" [class.user]="message.isUser" [class.ai]="!message.isUser">
+        <div class="message-content">
+          <div class="message-text">{{ message.text }}</div>
+          <div class="message-time">
+            {{ message.timestamp | date:'HH:mm' }}
+          </div>
+        </div>
+      </div>
+      }
+
+      @if(isLoadingMessage) {
+      <div class="message ai">
+        <div class="message-content">
+          <div class="typing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+
+    <div class="chat-input-container">
+      <div class="chat-input">
+        <textarea [(ngModel)]="currentMessage" (keydown)="onKeyPress($event)" placeholder="輸入您的問題..." rows="2"
+          [disabled]="isLoadingMessage"></textarea>
+        <button class="send-btn" (click)="sendMessage()" [disabled]="!currentMessage.trim() || isLoadingMessage">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="m22 2-20 10 20 10V2z" stroke="currentColor" stroke-width="2" fill="none" />
+            <path d="M22 2 11 13" stroke="currentColor" stroke-width="2" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+</div>
 
 @if(isUploading){
 <div class="spinner-container">
@@ -8,13 +85,9 @@
 </div>
 }
 
-
-<div>
+<div class="controls">
   @if(mode == 'init'){
   <button (click)="onclickMaster()">Start Master</button>
-  }
-
-  @if(mode == 'init'){
   <button (click)="onclickViewer()">Start Viewer</button>
   }
 
@@ -26,6 +99,7 @@
   }
   }
 </div>
+
 @if(isUploading){
 <div class="upload-mask">
   <div class="spinner-container">

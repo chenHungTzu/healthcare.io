@@ -5,6 +5,8 @@ ECR_TRANSCRIBE_URL=${aws_ecr_repository.transcribe_repo.repository_url}
 LAMBDA_TRANSCRIBE_ARN=${aws_lambda_function.transcribe.arn}
 ECR_TRANSCRIBE_SUMMARY_URL=${aws_ecr_repository.summary_repo.repository_url}
 LAMBDA_TRANSCRIBE_SUMMARY_ARN=${aws_lambda_function.transcribe_summary.arn}
+ECR_CHATBOT_URL=${aws_ecr_repository.chatbot_repo.repository_url}
+LAMBDA_CHATBOT_ARN=${aws_lambda_function.chatbot.arn}
   EOF
   filename = "../Taskfile.iac.env"
 }
@@ -16,7 +18,8 @@ export const base = {
   kvs_channel_arn: "${awscc_kinesisvideo_signaling_channel.provider_channel.arn}",
   kvs_role_arn: "${aws_iam_role.kvs_sts_role.arn}",
   region: "${data.aws_region.current.name}",
-  audioBucketName: "${aws_s3_bucket.audio.bucket}"
+  audioBucketName: "${aws_s3_bucket.audio.bucket}",
+  chatUrl: "${aws_api_gateway_stage.chatbot_stage.invoke_url}/${aws_api_gateway_resource.chatbot_resource.path_part}",
 };
 EOF
   filename = "../healthcare.io.ui/src/environments/environment.base.ts"
