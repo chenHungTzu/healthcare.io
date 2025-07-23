@@ -56,6 +56,13 @@ namespace healthcare.io.chatbot
                 return new APIGatewayProxyResponse
                 {
                     StatusCode = 200,
+                    Headers = new Dictionary<string, string>
+                    {
+                        { "Content-Type", "application/json" },
+                        { "Access-Control-Allow-Origin", "*" },
+                        { "Access-Control-Allow-Methods", "OPTIONS,POST,GET" },
+                        { "Access-Control-Allow-Headers", "Content-Type" }
+                    },
                     Body = sb.ToString()
                 };
             }

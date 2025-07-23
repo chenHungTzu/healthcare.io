@@ -1,9 +1,18 @@
 <div class="video-container">
-  <video id="remoteView" #remoteView autoplay class="video-player"></video>
+  <video id="remoteView" #remoteView autoplay muted class="video-player" playsInline></video>
 
 
   <!-- 添加本地視訊畫面 -->
-  <video id="localView" #localView autoplay muted class="local-video"></video>
+  <video id="localView" #localView autoplay muted class="local-video" playsInline></video>
+
+  @if(transcriptionText){
+  <!-- 轉錄文字顯示區域 - 浮動在視訊上方 -->
+  <div class="transcription-overlay">
+    <div class="transcription-text">
+      {{ transcriptionText}}
+    </div>
+  </div>
+  }
 
   <!-- 聊天按鈕 -->
   <div class="chat-toggle-btn" (click)="toggleChat()" [class.active]="isChatOpen">

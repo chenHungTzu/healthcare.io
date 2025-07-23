@@ -847,11 +847,11 @@ html {
   }
 }
 
-// 本地視訊顯示 - 調整到左下角
+// 本地視訊顯示 - 固定在右上角
 .local-video {
   position: absolute;
-  bottom: 20px;
-  left: 20px; // 改為左下角
+  top: 20px;
+  right: 20px;
   width: 150px;
   height: 100px;
   border-radius: 8px;
@@ -870,16 +870,16 @@ html {
   .local-video {
     width: 120px;
     height: 70px;
-    bottom: 70px;
-    left: 16px;
+    top: 16px;
+    right: 16px;
   }
 }
 
 @media (min-width: 769px) and (max-width: 1024px) {
   .video-container {
     .local-video {
-      bottom: 24px;
-      left: 24px; // 平板版調整到左下角
+      top: 24px;
+      right: 24px;
     }
   }
 }
@@ -889,24 +889,121 @@ html {
     .local-video {
       width: 180px;
       height: 120px;
-      bottom: 32px;
-      left: 32px; // 桌面版調整到左下角
+      top: 32px;
+      right: 32px;
     }
   }
 }
 
 // 當聊天室開啟時，調整本地視訊位置（手機版）
 .chat-panel~.local-video {
-  bottom: 100px; // 避免與聊天輸入框重疊，但保持在左下角
+  top: 80px; // 避免與聊天標題列重疊，向下移動
 }
 
-// 桌面版聊天室開啟時的調整 - 因為聊天室在右側，所以左下角不需要特別調整
+// 桌面版聊天室開啟時的調整
 @media (min-width: 769px) {
   .video-container {
     .chat-panel~.local-video {
-      // 移除 right 調整，保持在左下角
-      bottom: 32px;
-      left: 32px; // 確保在左下角
+      right: 420px; // 聊天室寬度400px + 20px間距
     }
   }
 }
+
+
+/* filepath: /Users/hungtzuchen/Desktop/proj/healthcare.io/healthcare.io.ui/src/app/app.component.scss */
+// ...existing code...
+
+.transcription-overlay {
+  position: absolute;
+  bottom: 100px; // 在控制按鈕上方
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 80%;
+  background-color: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 16px;
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 50;
+
+  .transcription-text {
+    color: white;
+    font-size: 16px;
+    line-height: 1.5;
+    flex: 1;
+    word-wrap: break-word;
+    text-align: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  .clear-transcription-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 6px;
+    padding: 8px;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  // 響應式調整
+  @media (max-width: 480px) {
+    bottom: 80px;
+    max-width: 90%;
+    padding: 12px;
+
+    .transcription-text {
+      font-size: 14px;
+    }
+  }
+
+  @media (min-width: 769px) {
+    bottom: 120px;
+    max-width: 70%;
+  }
+
+  @media (min-width: 1025px) {
+    bottom: 140px;
+    max-width: 60%;
+  }
+
+  /* 滾動條樣式 */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+  }
+}
+
+// ...existing code...
+
+

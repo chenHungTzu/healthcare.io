@@ -60,6 +60,14 @@ resource "aws_iam_role_policy" "kvs_sts_role_policy" {
           "${aws_s3_bucket.audio.arn}/*"
         ]
       },
+      {
+        Effect = "Allow",
+        Action = [
+          "transcribe:StartStreamTranscription",
+          "transcribe:StartStreamTranscriptionWebSocket"
+        ],
+        Resource = "*"
+      }
     ],
   })
 }

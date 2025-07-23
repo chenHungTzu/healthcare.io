@@ -5,6 +5,7 @@ import { STSClient, AssumeRoleWithWebIdentityCommand } from '@aws-sdk/client-sts
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { KinesisVideoClient, GetSignalingChannelEndpointCommand } from '@aws-sdk/client-kinesis-video';
 import { KinesisVideoSignalingClient, GetIceServerConfigCommand } from '@aws-sdk/client-kinesis-video-signaling';
+import { TranscribeStreamingClient, StartStreamTranscriptionCommand, AudioStream } from '@aws-sdk/client-transcribe-streaming';
 import { Role } from './kvsRole';
 import { AwsConfig } from './aws.config';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
@@ -30,6 +31,18 @@ export class AppComponent {
   mediaRecorder!: MediaRecorder;
   recordedChunks: Blob[] = [];
 
+  // 新增即時轉錄相關屬性
+  audioContext!: AudioContext;
+  analyser!: AnalyserNode;
+  transcribeClient!: TranscribeStreamingClient;
+  isTranscribing = false;
+  transcriptionText = '';
+  soundDetectionActive = false;
+  isTranscribeStreamActive = false;
+  currentTranscribeCommand: any = null;
+  transcribeMediaRecorder!: MediaRecorder; // 替換 audioProcessor
+  transcribeStream!: MediaStream; // 用於轉錄的音訊流
+
   mode: 'init' | 'master' | 'viewer' = 'init';
   isRecording = false;
   isUploading = false;
@@ -38,14 +51,19 @@ export class AppComponent {
   currentMessage = '';
   chatMessages: ChatMessage[] = [];
   isLoadingMessage = false;
+
   constructor(private http: HttpClient) {
     // 初始化 sessionId
     this.sessionId = this.generateSessionId();
+
+    // 一開始就初始化 Transcribe Client
+    this.initTranscribeClient();
   }
 
   private generateSessionId(): string {
     return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   }
+
   /**
    * 取得 AWS 設定（動態取得臨時憑證）
    * @returns
@@ -82,6 +100,386 @@ export class AppComponent {
   }
 
   /**
+   * 初始化 Transcribe Streaming Client
+   */
+  private async initTranscribeClient() {
+    try {
+      const cfg = await this.getAwsConfig();
+      this.transcribeClient = new TranscribeStreamingClient({
+        region: cfg.region,
+        credentials: {
+          accessKeyId: cfg.accessKeyId,
+          secretAccessKey: cfg.secretAccessKey,
+          sessionToken: cfg.sessionToken,
+        },
+      });
+      console.log('Transcribe Client 已初始化');
+    } catch (error) {
+      console.error('初始化 Transcribe Client 失敗:', error);
+    }
+  }
+
+  /**
+   * 開始即時轉錄（在 RTC 連線完成後自動調用）
+   */
+  async startTranscription() {
+    if (this.isTranscribing) return;
+
+    try {
+      this.isTranscribing = true;
+
+      // 如果 client 還沒初始化，再次嘗試初始化
+      if (!this.transcribeClient) {
+        await this.initTranscribeClient();
+      }
+
+      // 初始化音訊分析和合併
+      this.audioContext = new AudioContext({ sampleRate: 16000 });
+      this.analyser = this.audioContext.createAnalyser();
+      this.analyser.fftSize = 512;
+
+      // 創建音訊合併流
+      this.transcribeStream = await this.createCombinedAudioStream();
+
+      const source = this.audioContext.createMediaStreamSource(this.transcribeStream);
+      source.connect(this.analyser);
+
+      // 開始聲音檢測，只在有聲音時啟動轉錄
+      this.startSoundDetection();
+
+      console.log('轉錄系統已準備就緒，等待聲音觸發');
+
+    } catch (error) {
+      console.error('啟動轉錄系統失敗:', error);
+      this.isTranscribing = false;
+    }
+  }
+
+  /**
+   * 創建合併的音訊流（本地 + 遠端）- 簡化版本
+   */
+  private async createCombinedAudioStream(): Promise<MediaStream> {
+    const audioContext = new AudioContext({ sampleRate: 16000 });
+    const destination = audioContext.createMediaStreamDestination();
+
+    // 合併本地音訊
+    if (this.localStream && this.localStream.getAudioTracks().length > 0) {
+      const localSource = audioContext.createMediaStreamSource(this.localStream);
+      localSource.connect(destination);
+      console.log('已加入本地音訊到轉錄流');
+    }
+
+    // 合併遠端音訊
+    if (this.remoteStream && this.remoteStream.getAudioTracks().length > 0) {
+      const remoteSource = audioContext.createMediaStreamSource(this.remoteStream);
+      remoteSource.connect(destination);
+      console.log('已加入遠端音訊到轉錄流');
+    } else {
+      console.log('遠端音訊流尚未可用，僅使用本地音訊');
+    }
+
+    return destination.stream;
+  }
+
+  /**
+   * 開始 Transcribe 串流 - 改用 PCM 格式
+   */
+  private async startTranscriptionStream() {
+    if (this.isTranscribeStreamActive || !this.transcribeStream) return;
+
+    try {
+      this.isTranscribeStreamActive = true;
+      console.log('開始 Transcribe 串流');
+
+      const audioStream = this.createAudioStream();
+
+      const command = new StartStreamTranscriptionCommand({
+        LanguageCode: 'zh-TW',
+        MediaSampleRateHertz: 16000,
+        MediaEncoding: 'pcm', // 改用 PCM 格式
+        AudioStream: audioStream,
+      });
+
+      const response = await this.transcribeClient.send(command);
+      console.log('Transcribe 串流已建立，使用 PCM 格式');
+
+      if (response.TranscriptResultStream) {
+        for await (const event of response.TranscriptResultStream) {
+          if (!this.isTranscribeStreamActive) break;
+
+          if (event.TranscriptEvent?.Transcript?.Results) {
+            for (const result of event.TranscriptEvent.Transcript.Results) {
+              if (result.Alternatives && result.Alternatives[0]) {
+                const transcript = result.Alternatives[0].Transcript || '';
+                const isPartial = !result.IsPartial;
+
+                if (transcript.trim()) {
+                  if (isPartial) {
+                    this.transcriptionText += transcript + ' ';
+                    console.log('✅ 完整轉錄:', transcript);
+                  } else {
+                    //this.transcriptionText = transcript
+                    //console.log('🔄 部分轉錄:', transcript);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('轉錄串流錯誤:', error);
+      this.isTranscribeStreamActive = false;
+    }
+  }
+
+  /**
+   * 創建音訊串流 - 直接使用 PCM 格式
+   */
+  private createAudioStream(): AsyncIterable<AudioStream> {
+    if (!this.transcribeStream) {
+      throw new Error('音訊流未初始化');
+    }
+
+    let isActive = true;
+    const self = this;
+    let lastDataTime = Date.now();
+
+    return {
+      async *[Symbol.asyncIterator]() {
+        try {
+          // 直接使用 Web Audio API 處理音訊流
+          const audioContext = new AudioContext({ sampleRate: 16000 });
+          const source = audioContext.createMediaStreamSource(self.transcribeStream);
+          const processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+          let audioChunks: Float32Array[] = [];
+
+          processor.onaudioprocess = (event) => {
+            const inputData = event.inputBuffer.getChannelData(0);
+            audioChunks.push(new Float32Array(inputData));
+          };
+
+          source.connect(processor);
+          processor.connect(audioContext.destination);
+
+          console.log('開始直接 PCM 音訊處理');
+
+          while (isActive && self.isTranscribeStreamActive) {
+            await new Promise(resolve => setTimeout(resolve, 250));
+
+            const currentTime = Date.now();
+
+            if (audioChunks.length > 0) {
+              // 處理累積的音訊資料
+              const chunk = audioChunks.shift()!;
+
+              try {
+                // 直接轉換 Float32 到 16-bit PCM
+                const pcmData = self.convertFloat32ToPCM(chunk);
+
+                if (pcmData.length > 16384) {
+                  const truncatedData = pcmData.slice(0, 16384);
+                  yield {
+                    AudioEvent: {
+                      AudioChunk: truncatedData
+                    }
+                  };
+                } else {
+                  yield {
+                    AudioEvent: {
+                      AudioChunk: pcmData
+                    }
+                  };
+                }
+
+                lastDataTime = currentTime;
+                console.log('已發送 PCM 音訊資料，大小:', Math.min(pcmData.length, 16384));
+              } catch (error) {
+                console.error('處理音訊塊錯誤:', error);
+              }
+            } else {
+              // 發送 PCM 格式的靜音資料
+              if (currentTime - lastDataTime > 5000) {
+                const silencePCM = new Int16Array(256).fill(0);
+                yield {
+                  AudioEvent: {
+                    AudioChunk: new Uint8Array(silencePCM.buffer)
+                  }
+                };
+                lastDataTime = currentTime;
+                console.log('發送 PCM 靜音資料保持連線');
+              }
+            }
+          }
+
+          // 清理資源
+          processor.disconnect();
+          source.disconnect();
+          audioContext.close();
+
+        } catch (error) {
+          console.error('音訊串流錯誤:', error);
+        } finally {
+          isActive = false;
+        }
+      }
+    };
+  }
+
+  /**
+   * 將 Float32 音訊資料直接轉換為 PCM 格式
+   */
+  private convertFloat32ToPCM(float32Data: Float32Array): Uint8Array {
+    try {
+      // 轉換為 16-bit PCM
+      const pcmData = new Int16Array(float32Data.length);
+      for (let i = 0; i < float32Data.length; i++) {
+        // 將 float32 (-1.0 to 1.0) 轉換為 int16 (-32768 to 32767)
+        const sample = Math.max(-1, Math.min(1, float32Data[i]));
+        pcmData[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+      }
+
+      // 返回 PCM 資料的 Uint8Array 視圖
+      return new Uint8Array(pcmData.buffer);
+    } catch (error) {
+      console.error('Float32 to PCM 轉換失敗:', error);
+
+      // 如果轉換失敗，返回靜音資料
+      const silenceData = new Int16Array(1024).fill(0);
+      return new Uint8Array(silenceData.buffer);
+    }
+  }
+
+  /**
+   * 更新轉錄流（當遠端音訊連接後調用）- 簡化版本
+   */
+  private async updateTranscribeStream() {
+    if (!this.isTranscribing) return;
+
+    try {
+      // 停止現有轉錄
+      this.stopTranscriptionStream();
+
+      // 等待一下再重新開始
+      setTimeout(async () => {
+        if (this.transcribeStream) {
+          this.transcribeStream.getTracks().forEach(track => track.stop());
+        }
+
+        this.transcribeStream = await this.createCombinedAudioStream();
+
+        if (this.audioContext && this.analyser) {
+          const source = this.audioContext.createMediaStreamSource(this.transcribeStream);
+          source.connect(this.analyser);
+        }
+
+        this.startTranscriptionStream();
+        console.log('轉錄流已更新');
+      }, 2000);
+
+    } catch (error) {
+      console.error('更新轉錄流失敗:', error);
+    }
+  }
+
+  /**
+   * 停止 Transcribe 串流
+   */
+  private stopTranscriptionStream() {
+    if (!this.isTranscribeStreamActive) return;
+
+    this.isTranscribeStreamActive = false;
+    this.currentTranscribeCommand = null;
+
+    if (this.transcribeMediaRecorder && this.transcribeMediaRecorder.state === 'recording') {
+      this.transcribeMediaRecorder.stop();
+    }
+
+  }
+
+  /**
+   * 停止即時轉錄
+   */
+  stopTranscription() {
+    this.isTranscribing = false;
+    this.soundDetectionActive = false;
+    this.stopTranscriptionStream();
+
+    if (this.transcribeStream) {
+      this.transcribeStream.getTracks().forEach(track => track.stop());
+    }
+
+    if (this.audioContext) {
+      this.audioContext.close();
+    }
+
+    console.log('即時轉錄已停止');
+    console.log('完整轉錄文字:', this.transcriptionText);
+    this.clearTranscription();
+  }
+
+  /**
+   * 清除轉錄文字
+   */
+  clearTranscription() {
+    this.transcriptionText = '';
+  }
+
+  /**
+   * 聲音檢測
+   */
+  private startSoundDetection() {
+    if (!this.analyser) return;
+
+    this.soundDetectionActive = true;
+    const dataArray = new Uint8Array(this.analyser.fftSize);
+    const threshold = 6; // 聲音檢測閾值
+    let silenceCounter = 0;
+    let soundCounter = 0;
+    const silenceThreshold = 120; // 約2秒的靜音後停止轉錄
+    const soundThreshold = 1; // 需要連續檢測到聲音3次才啟動
+
+    const detectSound = () => {
+      if (!this.soundDetectionActive) return;
+
+      this.analyser.getByteTimeDomainData(dataArray);
+
+      let total = 0;
+      for (let i = 0; i < dataArray.length; i++) {
+        total += Math.abs(dataArray[i] - 128);
+      }
+
+      const average = total / dataArray.length;
+
+      if (average > threshold) {
+        soundCounter++;
+        silenceCounter = 0;
+
+        // 需要連續檢測到聲音才啟動轉錄
+        if (soundCounter >= soundThreshold && !this.isTranscribeStreamActive) {
+          console.log("🎤 連續檢測到聲音 - 啟動轉錄");
+          this.startTranscriptionStream();
+        }
+      } else {
+        soundCounter = 0;
+        silenceCounter++;
+
+        // 連續靜音一段時間後停止轉錄串流
+        if (silenceCounter > silenceThreshold && this.isTranscribeStreamActive) {
+          console.log("🤫 持續靜音 - 停止轉錄串流");
+          this.stopTranscriptionStream();
+          this.clearTranscription();
+        }
+      }
+
+      requestAnimationFrame(detectSound);
+    };
+
+    detectSound();
+  }
+
+  /**
    * 初始化 Kinesis Video Client
    * @param cfg
    * @returns
@@ -96,7 +494,6 @@ export class AppComponent {
       },
     });
   }
-
 
   /**
    * 初始化 Signaling Client
@@ -200,6 +597,9 @@ export class AppComponent {
     });
     signalingClient.on('sdpAnswer', async answer => {
       await peerConnection.setRemoteDescription(answer);
+      // RTC 連線完成後自動啟動轉錄
+      console.log('Viewer: RTC 連線完成，啟動轉錄系統');
+      await this.startTranscription();
     });
     signalingClient.on('iceCandidate', candidate => {
       peerConnection.addIceCandidate(candidate);
@@ -211,6 +611,9 @@ export class AppComponent {
     });
     peerConnection.addEventListener('track', event => {
       this.remoteView.nativeElement.srcObject = event.streams[0];
+      this.remoteStream = event.streams[0];
+
+      this.updateTranscribeStream();
     });
     signalingClient.open();
   }
@@ -222,7 +625,7 @@ export class AppComponent {
     this.mode = 'master';
     const cfg = await this.getAwsConfig();
     let remoteId = '';
-    const endpoints = await this.getSignalingChannelEndpoint(cfg, Role.MASTER); // 或 'VIEWER'
+    const endpoints = await this.getSignalingChannelEndpoint(cfg, Role.MASTER);
     const httpsEndpoint = endpoints.ResourceEndpointList?.find(x => x.Protocol === 'HTTPS')?.ResourceEndpoint ?? '';
     const wssEndpoint = endpoints.ResourceEndpointList?.find(x => x.Protocol === 'WSS')?.ResourceEndpoint ?? '';
     const iceServers = await this.getIceServers(cfg, httpsEndpoint);
@@ -234,7 +637,6 @@ export class AppComponent {
         video: { width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: true,
       });
-      // 顯示本地視訊
       this.localView.nativeElement.srcObject = this.localStream;
       this.localStream.getTracks().forEach(track => peerConnection.addTrack(track, this.localStream));
     });
@@ -243,6 +645,9 @@ export class AppComponent {
       await peerConnection.setRemoteDescription(offer);
       await peerConnection.setLocalDescription(await peerConnection.createAnswer({ offerToReceiveAudio: true, offerToReceiveVideo: true }));
       signalingClient.sendSdpAnswer(peerConnection.localDescription as RTCSessionDescription, remoteId);
+      // RTC 連線完成後自動啟動轉錄
+      console.log('Master: RTC 連線完成，啟動轉錄系統');
+      await this.startTranscription();
     });
     signalingClient.on('iceCandidate', candidate => {
       peerConnection.addIceCandidate(candidate);
@@ -255,6 +660,9 @@ export class AppComponent {
     peerConnection.addEventListener('track', event => {
       this.remoteView.nativeElement.srcObject = event.streams[0];
       this.remoteStream = event.streams[0];
+
+      // 當遠端音訊可用時，更新轉錄流
+      this.updateTranscribeStream();
     });
     signalingClient.open();
   }
@@ -383,9 +791,8 @@ export class AppComponent {
         Message: messageToSend,
         SessionId: this.sessionId
       }, {
-        responseType: 'text' // 指定回應類型為文字
+        responseType: 'text'
       }).toPromise();
-
 
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -393,8 +800,6 @@ export class AppComponent {
         isUser: false,
         timestamp: new Date()
       };
-
-
 
       this.chatMessages.push(aiMessage);
     } catch (error) {
@@ -408,7 +813,6 @@ export class AppComponent {
       this.chatMessages.push(errorMessage);
     } finally {
       this.isLoadingMessage = false;
-      // 滾動到聊天室底部
       setTimeout(() => this.scrollToBottom(), 100);
     }
   }
@@ -417,9 +821,8 @@ export class AppComponent {
    * 處理 Enter 鍵發送訊息
    */
   onKeyPress(event: KeyboardEvent) {
-    // 檢查是否為輸入法組字狀態
     if (event.isComposing || event.keyCode === 229) {
-      return; // 如果正在組字，不處理
+      return;
     }
 
     if (event.key === 'Enter' && !event.shiftKey) {
@@ -447,6 +850,3 @@ export class AppComponent {
     this.sessionId = this.generateSessionId();
   }
 }
-
-
-
