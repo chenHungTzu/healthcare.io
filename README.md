@@ -140,12 +140,9 @@ task local-frontend-run
 7. 資料同步完畢後，可按下右下角「聊天」按鈕進行討論或往 AWS Bedrock Agent Console 進行 AI 問答測試
 
    > 🔥 上下文同步需要等 IngestJob 執行完畢，可能需要一點時間。
-   >
 
-   - Chat Call API
-     ![AI 助理示範 - Call API](./img/chat.png)
-   - 或是至 AWS Bedrock Agent Console 詢問
-     ![AI 助理示範 - AWS Bedrock Agent Console](./img/assistant-demo.png)
+   ![AI 助理示範 - Call API](./img/chat.png)
+   
 8. (可選) 即時轉錄時可提供翻譯功能，點擊右邊「翻譯」按鈕
    ![翻譯選擇](./img/translate.png)
 9. 結果展示
@@ -179,6 +176,7 @@ task infra-down
 ## 🚫 系統限制與注意事項
 
 > - 因爲概念驗證階段，並無整合整合系統Identity，故看診時可能會需要口頭詢問病人資訊。
+> - 瀏覽器需支援 WebRTC 、 AudioContext 等相關功能
 
 ## ⚠️ 重要安全聲明
 
