@@ -119,32 +119,60 @@ task local-frontend-run
 
 應用程式將透過 `Devtunnel` 代理啟動，如下圖所示：
 
-![系統運行截圖](./img/running.png)
+<div align="center">
+  <img src="./img/running.png" alt="系統運行截圖" width="600"/>
+  <p><em>系統運行截圖</em></p>
+</div>
 
 **測試步驟：**
 
-1. 從裝置透過瀏覽器輸入網址（如範例：`https://7sw5rpg7-4200.asse.devtunnels.ms`）
+1. **啟動起始畫面**
+   
+   從裝置透過瀏覽器輸入網址（如範例：`https://7sw5rpg7-4200.asse.devtunnels.ms`）
 
-   - 起始畫面如下
-      ![起始畫面](./img/init.png)
-2. 點擊「Start Master」按鈕啟動主控端
-3. 從另一台裝置的瀏覽器輸入相同網址
-4. 點擊「Start Viewer」按鈕啟動觀看端
-5. 確認視訊連線正常，開始進行通話
-6. 成功通話後，在 Master 端可以點擊「Start Recording」/「Stop Recording」
+   <div align="center">
+     <img src="./img/init.png" alt="起始畫面" width="500"/>
+     <p><em>起始畫面</em></p>
+   </div>
 
+2. **建立視訊連線**
+   - 點擊「Start Master」按鈕啟動主控端
+   - 從另一台裝置的瀏覽器輸入相同網址
+   - 點擊「Start Viewer」按鈕啟動觀看端
+   - 確認視訊連線正常，開始進行通話
+
+3. **開始錄音與處理**
+   
+   成功通話後，在 Master 端可以點擊「Start Recording」/「Stop Recording」
    - Start Recording 針對視訊內容進行錄音
-   - Stop Recording 將音頻上傳至S3，用以同步知識庫更新。
-7. 資料同步完畢後，可按下右下角「聊天」按鈕進行討論或往 AWS Bedrock Agent Console 進行 AI 問答測試
+   - Stop Recording 將音頻上傳至S3，用以同步知識庫更新
+
+4. **AI 助理測試**
+   
+   資料同步完畢後，可按下右下角「聊天」按鈕進行討論或往 AWS Bedrock Agent Console 進行 AI 問答測試
 
    > 🔥 上下文同步需要等 IngestJob 執行完畢，可能需要一點時間。
-   >
 
-   ![AI 助理示範 - Call API](./img/chat.png)
-8. (可選) 即時轉錄時可提供翻譯功能，點擊右邊「翻譯」按鈕
-   ![翻譯選擇](./img/translate.png)
-9. 結果展示
-   ![對話過程](./img/meeting-live.jpg)
+   <div align="center">
+     <img src="./img/chat.png" alt="AI 助理示範" width="400"/>
+     <p><em>AI 助理示範 - Call API</em></p>
+   </div>
+
+5. **即時翻譯功能（可選）**
+   
+   即時轉錄時可提供翻譯功能，點擊右邊「翻譯」按鈕
+
+   <div align="center">
+     <img src="./img/translate.png" alt="翻譯選擇" width="400"/>
+     <p><em>翻譯功能設定</em></p>
+   </div>
+
+6. **完整對話展示**
+
+   <div align="center">
+     <img src="./img/meeting-live-1.jpg" alt="對話過程" width="600"/>
+     <p><em>實際對話過程展示</em></p>
+   </div>
 
 #### 4. 模擬音檔測試（可選）
 
