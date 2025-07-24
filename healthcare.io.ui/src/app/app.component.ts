@@ -54,10 +54,28 @@ export class AppComponent {
 
   /** 語言選擇器是否開啟 */
   isLanguageOpen = false;
-  /** 選中的語言代碼 */
-  selectedLanguageCode = 'zh-TW';
+
+  // 當前選擇的語言
+  selectedTranscribeLanguage: string = 'zh-TW';  // 預設中文轉錄
+  selectedTranslateLanguage: string = 'zh-TW';   // 預設翻譯成中文
+
   /** 可用的轉錄語言列表 */
-  transcribeLanguages: Language[] = []
+  translateLanguages: Language[] = []
+
+
+  /** Toast 通知相關 */
+  toastMessage = '';
+  isToastVisible = false;
+
+  // 轉錄語言選項（支援的語音識別語言）
+  transcribeLanguages = [
+    { LanguageCode: 'zh-TW', LanguageName: '繁體中文' },
+    { LanguageCode: 'zh-CN', LanguageName: '簡體中文' },
+    { LanguageCode: 'en-US', LanguageName: '英文（美國）' },
+    { LanguageCode: 'en-GB', LanguageName: '英文（英國）' },
+    { LanguageCode: 'ja-JP', LanguageName: '日文' },
+    { LanguageCode: 'ko-KR', LanguageName: '韓文' },
+  ];
 
   /**
    * 建構函式
@@ -84,7 +102,7 @@ export class AppComponent {
 
     // 訂閱語言代碼更新
     this.translateService.languageCodes.subscribe(languages => {
-      this.transcribeLanguages = languages;
+      this.translateLanguages = languages;
     });
   }
 
@@ -113,6 +131,7 @@ export class AppComponent {
     const peerConnection = new RTCPeerConnection({ iceServers });
     const signalingClient = await this.kvsService.createSignalingClient(wssEndpoint, Role.VIEWER, clientId);
 
+    this.setupConnectionStateHandler(peerConnection);
     signalingClient.on('open', async () => {
       const viewerStream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 1280 }, height: { ideal: 720 } },
@@ -135,7 +154,9 @@ export class AppComponent {
     signalingClient.on('iceCandidate', candidate => {
       peerConnection.addIceCandidate(candidate);
     });
-    signalingClient.on('close', () => { });
+    signalingClient.on('close', () => {
+      console.log('Signaling client closed');
+    });
     signalingClient.on('error', error => { console.log('error', error); });
     peerConnection.addEventListener('icecandidate', ({ candidate }) => {
       if (candidate) signalingClient.sendIceCandidate(candidate);
@@ -143,9 +164,9 @@ export class AppComponent {
     peerConnection.addEventListener('track', event => {
       this.remoteView.nativeElement.srcObject = event.streams[0];
       this.remoteStream = event.streams[0];
-
       this.transcribeService.updateTranscribeStream(this.localStream, this.remoteStream);
     });
+
     signalingClient.open();
   }
 
@@ -164,6 +185,8 @@ export class AppComponent {
     const iceServers = await this.kvsService.getIceServers(httpsEndpoint);
     const peerConnection = new RTCPeerConnection({ iceServers, iceTransportPolicy: 'all' });
     const signalingClient = await this.kvsService.createSignalingClient(wssEndpoint, Role.MASTER);
+
+    this.setupConnectionStateHandler(peerConnection);
 
     signalingClient.on('open', async () => {
       this.localStream = await navigator.mediaDevices.getUserMedia({
@@ -185,7 +208,9 @@ export class AppComponent {
     signalingClient.on('iceCandidate', candidate => {
       peerConnection.addIceCandidate(candidate);
     });
-    signalingClient.on('close', () => { });
+    signalingClient.on('close', () => {
+      console.log('Signaling client closed');
+    });
     signalingClient.on('error', error => { console.log('error', error); });
     peerConnection.addEventListener('icecandidate', ({ candidate }) => {
       if (candidate) signalingClient.sendIceCandidate(candidate, remoteId);
@@ -193,13 +218,42 @@ export class AppComponent {
     peerConnection.addEventListener('track', event => {
       this.remoteView.nativeElement.srcObject = event.streams[0];
       this.remoteStream = event.streams[0];
-
-      // 當遠端音訊可用時，更新轉錄流
       this.transcribeService.updateTranscribeStream(this.localStream, this.remoteStream);
     });
+
+
     signalingClient.open();
   }
 
+
+  /**
+   * 處理 RTC 連線狀態變化
+   * @param peerConnection RTCPeerConnection 實例
+   */
+  private setupConnectionStateHandler(peerConnection: RTCPeerConnection) {
+    peerConnection.onconnectionstatechange = () => {
+      switch (peerConnection.connectionState) {
+        case 'connected':
+          console.log('RTC 連線已建立');
+          break;
+        case 'disconnected':
+          console.log('RTC 連線中斷');
+          this.transcribeService.stopTranscribing();
+          this.showToast('RTC 連線中斷，請重新連線', 5000);
+          break;
+        case 'failed':
+          console.log('RTC 連線失敗');
+          this.transcribeService.stopTranscribing();
+          this.showToast('RTC 連線失敗，請重新連線', 5000);
+          break;
+        case 'closed':
+          console.log('RTC 連線已關閉');
+          this.transcribeService.stopTranscribing();
+          this.showToast('RTC 連線已關閉，請重新連線', 5000);
+          break;
+      }
+    };
+  }
   /**
    * 開始錄音
    * 使用音訊服務開始錄製本地和遠端音訊
@@ -303,13 +357,37 @@ export class AppComponent {
   }
 
   /**
-   * 選擇語言
-   * 設定目標翻譯語言並關閉語言選擇器
-   * @param {string} languageCode - 語言代碼（如 'zh-TW', 'en-US'）
+   * 選擇轉錄語言
+   * @param languageCode
    */
-  selectLanguage(languageCode: string) {
-    this.selectedLanguageCode = languageCode;
-    this.isLanguageOpen = false;
-    this.translateService.setTargetLanguageCode(languageCode);
+  selectTranscribeLanguage(languageCode: string) {
+    this.selectedTranscribeLanguage = languageCode;
+    console.log('轉錄語言設定為:', languageCode);
+    this.transcribeService.setTranscribeLanguage(languageCode);
+    this.translateService.setTranscribeLanguage(languageCode);
+  }
+
+  /**
+   * 選擇翻譯語言
+   * @param languageCode
+   */
+  selectTranslateLanguage(languageCode: string) {
+    this.selectedTranslateLanguage = languageCode;
+    console.log('翻譯語言設定為:', languageCode);
+    this.translateService.setTranslateLanguage(languageCode);
+  }
+
+  /**
+  * 顯示 Toast 通知
+  * @param message 要顯示的訊息
+  * @param duration 顯示持續時間（毫秒）
+  */
+  showToast(message: string, duration: number = 5000) {
+    this.toastMessage = message;
+    this.isToastVisible = true;
+
+    setTimeout(() => {
+      this.isToastVisible = false;
+    }, duration);
   }
 }

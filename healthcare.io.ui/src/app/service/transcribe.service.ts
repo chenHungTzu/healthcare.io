@@ -21,8 +21,8 @@ export class TranscribeService {
   isTranscribeStreamActive = false;
 
   transcribeText: BehaviorSubject<string> = new BehaviorSubject<string>('');
+  transcribeLanguageCode: BehaviorSubject<string> = new BehaviorSubject<string>('zh-TW'); // 默認轉錄語言
 
-  defaultLanguageCode: LanguageCode = 'zh-TW'; // 預設語言代碼
 
   constructor(private awsConfigService: AwsConfigService,
     private audioService: AudioService,
@@ -32,6 +32,11 @@ export class TranscribeService {
     }).catch(error => {
       console.error('Transcribe Client 初始化失敗:', error);
     });
+  }
+
+
+  setTranscribeLanguage(languageCode: string) {
+    this.transcribeLanguageCode.next(languageCode);
   }
 
   /**
@@ -52,9 +57,47 @@ export class TranscribeService {
 
 
   /**
-  * 開始即時轉錄（在 RTC 連線完成後自動調用）
-  */
-  public async startTranscription(localStream: MediaStream, remoteStream: MediaStream) {
+   * 停止轉錄系統
+   * @returns Promise<void>
+   */
+  public async stopTranscribing() {
+    if (!this.isTranscribing) return;
+
+    try {
+
+      this.isTranscribing = false;
+
+      this.stopSoundDetection();
+
+      // 停止音訊流
+      if (this.transcribeStream) {
+        this.transcribeStream.getTracks().forEach(track => track.stop());
+      }
+      // 停止音訊處理
+      if (this.audioContext) {
+        this.audioContext.close();
+        this.audioContext = undefined as any; // 清理 AudioContext
+      }
+      // 停止轉錄串流
+      this.stopTranscriptionStream();
+
+      // 清空轉錄文字
+      this.clearTranscription();
+
+      console.log('轉錄系統已停止');
+    } catch (error) {
+      console.error('停止轉錄系統失敗:', error);
+      this.isTranscribing = false;
+    }
+  }
+
+  /**
+   * 開始即時轉錄
+   * @param localStream
+   * @param remoteStream
+   * @returns
+   */
+  public async startTranscription(localStream: MediaStream, remoteStream: MediaStream): Promise<void> {
     if (this.isTranscribing) return;
 
     try {
@@ -83,7 +126,19 @@ export class TranscribeService {
 
   }
 
-  private startSoundDetection() {
+  /**
+   * 停止聲音檢測
+   */
+  private stopSoundDetection(): void {
+    this.soundDetectionActive = false;
+    console.log('聲音檢測已停止');
+  }
+
+  /**
+   * 開始聲音檢測
+   * @returns
+   */
+  private startSoundDetection(): void {
     if (!this.analyser) return;
 
     this.soundDetectionActive = true;
@@ -91,8 +146,8 @@ export class TranscribeService {
     const threshold = 4; // 聲音檢測閾值
     let silenceCounter = 0;
     let soundCounter = 0;
-    const silenceThreshold = 120; // 約2秒的靜音後停止轉錄
-    const soundThreshold = 1; // 需要連續檢測到聲音3次才啟動
+    const silenceThreshold = 200;
+    const soundThreshold = 1;
 
     const detectSound = () => {
       if (!this.soundDetectionActive) return;
@@ -135,7 +190,7 @@ export class TranscribeService {
   }
 
   /**
-     * 開始 Transcribe 串流 - 改用 PCM 格式
+     * 開始 Transcribe 串流
      */
   private async startTranscriptionStream(): Promise<void> {
     if (this.isTranscribeStreamActive || !this.transcribeStream) return;
@@ -147,14 +202,16 @@ export class TranscribeService {
       const audioStream = this.createAudioStream();
 
       const command = new StartStreamTranscriptionCommand({
-        LanguageCode: this.defaultLanguageCode,
+        // IdentifyLanguage: true,
+        // LanguageOptions: 'zh-TW,en-US',
+        // PreferredLanguage: this.defaultLanguageCode,
+        LanguageCode: this.transcribeLanguageCode.value as LanguageCode,
         MediaSampleRateHertz: 16000,
-        MediaEncoding: 'pcm', // 改用 PCM 格式
+        MediaEncoding: 'pcm',
         AudioStream: audioStream,
       });
 
       const response = await this.transcribeClient.send(command);
-      console.log('Transcribe 串流已建立，使用 PCM 格式');
 
       if (response.TranscriptResultStream) {
         for await (const event of response.TranscriptResultStream) {
@@ -165,23 +222,18 @@ export class TranscribeService {
             for (const result of event.TranscriptEvent.Transcript.Results) {
               if (result.Alternatives && result.Alternatives[0]) {
                 const transcript = result.Alternatives[0].Transcript || '';
-                const isPartial = !result.IsPartial;
 
                 if (!transcript.trim()) continue;
-                if (!isPartial) {
-                  console.log('✅ 部分轉錄:', transcript);
-                  continue;
-                }
 
-                console.log('✅ 完整轉錄:', transcript);
-                if (this.defaultLanguageCode === this.translateService.targetLanguageCode.value) {
-                  this.transcribeText.next(this.transcribeText.value + transcript + ' ');
+                if (result.IsPartial) {
+                  console.log('✅ 部分轉錄:', transcript);
                 } else {
+                  console.log('✅ 完整轉錄:', transcript);
                   this.translateService.translateText(transcript).then(translatedText => {
+                    console.log('翻譯結果:', translatedText);
                     this.transcribeText.next(this.transcribeText.value + translatedText + ' ');
                   });
                 }
-
               }
             }
           }
@@ -289,6 +341,12 @@ export class TranscribeService {
   }
 
 
+  /**
+   * 更新轉錄串流
+   * @param localStream
+   * @param remoteStream
+   * @returns
+   */
   public async updateTranscribeStream(localStream: MediaStream, remoteStream: MediaStream) {
     if (!this.isTranscribing) return;
 

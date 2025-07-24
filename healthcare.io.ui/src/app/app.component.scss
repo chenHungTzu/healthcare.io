@@ -14,15 +14,30 @@ html {
 .video-container {
   position: relative;
   width: 100%;
-  height: 100vh;
+  height: 100vh; // 舊版瀏覽器回退
+  height: 100dvh; // 🔥 動態視窗高度，排除 URL 列
   background: #000;
   overflow: hidden;
+
+  // iOS Safari 特殊處理
+  @supports (-webkit-touch-callout: none) {
+    height: -webkit-fill-available;
+  }
 }
 
 .video-player {
   width: 100%;
-  height: 100%;
+  height: 100vh; // 舊版瀏覽器回退
+  height: 100dvh; // 🔥 動態視窗高度，排除 URL 列
   object-fit: cover;
+
+  // 🔥 新增錄音時的樣式
+  &.recording {
+    border-color: red;
+    border-style: solid;
+    border-width: 4px; // 或您想要的寬度
+    transition: border 0.3s ease; // 平滑過渡效果
+  }
 }
 
 // 聊天按鈕 - 響應式設計
@@ -854,8 +869,6 @@ html {
   right: 20px;
   width: 150px;
   height: 100px;
-  border-radius: 8px;
-  border: 2px solid white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   object-fit: cover;
   z-index: 10;
@@ -910,8 +923,7 @@ html {
 }
 
 
-/* filepath: /Users/hungtzuchen/Desktop/proj/healthcare.io/healthcare.io.ui/src/app/app.component.scss */
-// ...existing code...
+
 
 .transcription-overlay {
   position: absolute;
@@ -1037,14 +1049,17 @@ html {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 320px;
-  max-width: 90vw; // 確保在小螢幕上不會超出
+  width: 100vw;
+  max-width: 90vw;
   background: white;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   z-index: 1001;
-  overflow: hidden;
-  max-height: 80vh; // 限制最大高度
+  max-height: 80vh;
+  overflow: hidden; // 🔥 改為 hidden，讓內部元素處理滾動
+  display: flex; // 🔥 新增
+  flex-direction: column; // 🔥 新增
+
 
   .language-header {
     background: #28a745;
@@ -1053,6 +1068,10 @@ html {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0; // 🔥 新增：防止標題被壓縮
+    position: sticky; // 🔥 新增：固定在頂部
+    top: 0; // 🔥 新增
+    z-index: 1; // 🔥 新增
 
     h3 {
       margin: 0;
@@ -1073,6 +1092,53 @@ html {
         background: rgba(255, 255, 255, 0.2);
       }
     }
+  }
+
+  .language-content {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain; // 防止滾動事件冒泡
+
+    .language-section {
+      padding: 10px;
+      margin-bottom: 20px;
+
+      h4 {
+        margin: 0 0 10px 0;
+        color: #333;
+        font-size: 14px;
+        font-weight: 600;
+      }
+    }
+  }
+
+
+
+  .current-settings {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 15px;
+  }
+
+  .setting-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .setting-label {
+    font-weight: 500;
+    color: #666;
+  }
+
+  .setting-value {
+    color: #333;
+    font-weight: 600;
   }
 
   .language-list {
@@ -1126,7 +1192,6 @@ html {
   }
 
   .language-panel {
-    width: 250px;
     right: 10px;
   }
 }
@@ -1137,5 +1202,89 @@ html {
     right: 32px;
     width: 64px;
     height: 64px;
+  }
+}
+
+
+// Toast 通知樣式
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  background: #dc3545;
+  color: white;
+  padding: 0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  max-width: 90vw;
+  min-width: 280px;
+
+  &.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .toast-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    gap: 12px;
+  }
+
+  .toast-message {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  .toast-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+    flex-shrink: 0;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+  }
+
+  // 響應式調整
+  @media (max-width: 480px) {
+    top: 16px;
+    left: 16px;
+    right: 16px;
+    transform: translateY(-100px);
+    min-width: auto;
+
+    &.show {
+      transform: translateY(0);
+    }
+
+    .toast-content {
+      padding: 12px 16px;
+    }
+
+    .toast-message {
+      font-size: 13px;
+    }
   }
 }

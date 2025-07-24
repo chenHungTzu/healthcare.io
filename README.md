@@ -9,29 +9,26 @@
 ### 主要處理流程
 
 1. **身份驗證與權限取得**
-   - 使用者透過 Amazon Cognito 進行身份驗證
-   - 獲取必要的 AWS 服務存取權限
 
+   - 使用者透過 Amazon Cognito 進行身份驗證，獲取必要的 AWS 服務存取權限
 2. **視訊通話與音訊錄製**
+
    - Mobile Client (Viewer) 與 Web Client (Master) 建立 WebRTC 連線
    - 透過 Kinesis Video Streams 進行即時視訊串流
    - 錄製音訊並上傳至 S3 bucket
-
 3. **音訊轉錄與翻譯處理(批次/即時)**
+
    - 即時
-      - 前端擷取音頻，透過 Transcribe + Translate 進行處理
+     - 前端擷取音頻，透過 Transcribe (轉譯) + Translate (翻譯) 進行處理。
    - 批次
-      - 錄音上傳 S3 bucket 並觸發 Transcriber Lambda 函數
-      - 呼叫 Transcribe 服務進行轉錄作業，將逐字稿轉儲存至 S3 bucket
-
+     - 錄音上傳 S3 bucket 並觸發 Lambda 函數用以呼叫 Transcribe 進行轉錄作業，將逐字稿轉儲存至 S3 bucket。
 4. **AI 分析與摘要**
-   - 觸發 Transcribe-Summary Lambda 函數
-   - 呼叫 Amazon Bedrock API 針對逐字稿進行整理，生成醫療摘要和見解
-   - 觸發 Ingestion Job 將資料同步至 Amazon RDS (知識庫同步)
 
+   - 觸發 Lambda 函數，用以呼叫 Bedrock API 對逐字稿進行整理，生成醫療摘要和見解，上傳至 S3 Bucket 並觸發 Ingestion Job 將資料同步至 Amazon RDS (知識庫同步)。
 5. **問答服務**
-   - 透過 AGW + Lambda 執行 AI Agent 進行回答
-   - 系統可基於過往病歷內容，提供語意理解與上下文建議，輔助醫師判斷
+
+   - 透過 ApiGateway + Lambda 整合，執行 AI Agent 進行回答。
+   - 系統可基於過往錄音內容，提供語意理解與上下文建議，輔助醫師判斷。
 
 ## 📦 專案結構
 
@@ -140,9 +137,9 @@ task local-frontend-run
 
    - Start Recording 針對視訊內容進行錄音
    - Stop Recording 將音頻上傳至S3，用以同步知識庫更新。
-7. 資料同步完畢後，可按下右下角「聊天按鈕」進行討論或往 AWS Bedrock Agent Console 進行 AI 問答測試
+7. 資料同步完畢後，可按下右下角「聊天」按鈕進行討論或往 AWS Bedrock Agent Console 進行 AI 問答測試
 
-   > 上下文同步需要等 IngestJob 執行完畢，可能需要一點時間
+   > 🔥 上下文同步需要等 IngestJob 執行完畢，可能需要一點時間。
    >
 
    - Chat Call API
@@ -152,7 +149,7 @@ task local-frontend-run
 8. (可選) 即時轉錄時可提供翻譯功能，點擊右邊「翻譯」按鈕
    ![翻譯選擇](./img/translate.png)
 9. 結果展示
-   ![對話過程](./img/meeting-live.png)
+   ![對話過程](./img/meeting-live.jpg)
 
 #### 4. 模擬音檔測試（可選）
 
@@ -179,8 +176,12 @@ task infra-down
 
 > **注意**：請確保已正確配置 AWS 憑證和權限。詳細的基礎設施配置說明請參考 [infra 目錄](./healthcare.io.infra/)。
 
+## 🚫 系統限制與注意事項
+
+> - 因爲概念驗證階段，並無整合整合系統Identity，故看診時可能會需要口頭詢問病人資訊。
+
 ## ⚠️ 重要安全聲明
 
-> **警告**：目前為概念驗證，**尚未配置 PHI (Protected Health Information) 和 HIPAA 相關的安全保護措施**。
+> **警告**：**尚未配置 PHI 和 HIPAA 相關的安全保護措施**。
 >
 > **請勿直接用於處理真實的醫療資料或部署至生產環境**。

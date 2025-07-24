@@ -11,7 +11,7 @@ export class TranslateService {
   sourceLanguageCode: BehaviorSubject<string> = new BehaviorSubject<string>('zh-TW');
   targetLanguageCode: BehaviorSubject<string> = new BehaviorSubject<string>('zh-TW');
 
-  languageCodes : BehaviorSubject<Language[]> = new BehaviorSubject<Language[]>([]);
+  languageCodes: BehaviorSubject<Language[]> = new BehaviorSubject<Language[]>([]);
 
   constructor(private awsConfigService: AwsConfigService) {
     this.initTranslateClient().then(() => {
@@ -26,14 +26,26 @@ export class TranslateService {
     });
   }
 
-  public setSourceLanguageCode(code: string) {
+  /**
+   * 設置轉錄語言
+   * @param code 語言代碼
+   */
+  public setTranscribeLanguage(code: string) {
     this.sourceLanguageCode.next(code);
   }
 
-  public setTargetLanguageCode(code: string) {
+  /**
+   * 設置轉譯語言
+   * @param code 轉譯語言代碼
+   */
+  public setTranslateLanguage(code: string) {
     this.targetLanguageCode.next(code);
   }
 
+  /**
+   * 初始化翻譯客戶端
+   * @returns Promise<void>
+   */
   private async initTranslateClient(): Promise<void> {
     const config = await this.awsConfigService.getConfig();
     this.translateClient = new TranslateClient({

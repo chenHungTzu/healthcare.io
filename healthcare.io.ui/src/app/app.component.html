@@ -1,12 +1,19 @@
 <div class="video-container">
-  <video id="remoteView" #remoteView autoplay muted class="video-player" playsInline></video>
 
 
-  <!-- 添加本地視訊畫面 -->
+  <!-- Toast 通知 -->
+  <div class="toast" [class.show]="isToastVisible">
+    <div class="toast-content">
+      <span class="toast-message">{{ toastMessage }}</span>
+      <button class="toast-close" (click)="isToastVisible = false">×</button>
+    </div>
+  </div>
+
+  <video id="remoteView" #remoteView autoplay muted class="video-player" [class.recording]="isRecording"
+    playsInline></video>
   <video id="localView" #localView autoplay muted class="local-video" playsInline></video>
 
   @if(transcriptionText){
-  <!-- 轉錄文字顯示區域 - 浮動在視訊上方 -->
   <div class="transcription-overlay">
     <div class="transcription-text">
       {{ transcriptionText}}
@@ -18,25 +25,52 @@
 
   <!-- 語言選擇清單 -->
   @if(isLanguageOpen) {
+
   <div class="language-panel">
     <div class="language-header">
-      <h3>選擇轉錄語言</h3>
+      <h3>語言設定</h3>
       <button class="close-btn" (click)="this.isLanguageOpen = false">✕</button>
     </div>
 
-    <div class="language-list">
-      @for(lang of transcribeLanguages; track lang.LanguageName) {
-      <div class="language-item" [class.selected]="selectedLanguageCode === lang.LanguageCode"
-        (click)="selectLanguage(lang.LanguageCode)">
-        <span class="language-name">{{ lang.LanguageName }}</span>
-        <span class="language-code">{{ lang.LanguageCode }}</span>
-        @if(selectedLanguageCode === lang.LanguageCode) {
-        <span class="check-icon">✓</span>
-        }
+    <div class="language-content">
+      <!-- 轉錄語言選擇 -->
+      <div class="language-section">
+        <h4>母語</h4>
+        <div class="language-list">
+          @for(lang of transcribeLanguages; track lang.LanguageName) {
+          <div class="language-item" [class.selected]="selectedTranscribeLanguage === lang.LanguageCode"
+            (click)="selectTranscribeLanguage(lang.LanguageCode)">
+            <span class="language-name">{{ lang.LanguageName }}</span>
+            <span class="language-code">{{ lang.LanguageCode }}</span>
+            @if(selectedTranscribeLanguage === lang.LanguageCode) {
+            <span class="check-icon">✓</span>
+            }
+          </div>
+          }
+        </div>
       </div>
-      }
+
+      <!-- 翻譯語言選擇 -->
+      <div class="language-section">
+        <h4>翻譯語言</h4>
+        <div class="language-list">
+          @for(lang of translateLanguages; track lang.LanguageName) {
+          <div class="language-item" [class.selected]="selectedTranslateLanguage === lang.LanguageCode"
+            (click)="selectTranslateLanguage(lang.LanguageCode)">
+            <span class="language-name">{{ lang.LanguageName }}</span>
+            <span class="language-code">{{ lang.LanguageCode }}</span>
+            @if(selectedTranslateLanguage === lang.LanguageCode) {
+            <span class="check-icon">✓</span>
+            }
+          </div>
+          }
+        </div>
+      </div>
     </div>
+
   </div>
+
+
   }
 
 
