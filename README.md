@@ -131,7 +131,7 @@ task local-frontend-run
 3. 從另一台裝置的瀏覽器輸入相同網址
 4. 點擊「Start Viewer」按鈕啟動觀看端
 5. 確認視訊連線正常，開始進行通話
-6. 在 Master 端可以點擊「Start Recording」/「Stop Recording」
+6. 成功通話後，在 Master 端可以點擊「Start Recording」/「Stop Recording」
 
    - Start Recording 針對視訊內容進行錄音
    - Stop Recording 將音頻上傳至S3，用以同步知識庫更新。
