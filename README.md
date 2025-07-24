@@ -126,7 +126,7 @@ task local-frontend-run
 1. 從裝置透過瀏覽器輸入網址（如範例：`https://7sw5rpg7-4200.asse.devtunnels.ms`）
 
    - 起始畫面如下
-     ![起始畫面](./img/init.png)
+      ![起始畫面](./img/init.png)
 2. 點擊「Start Master」按鈕啟動主控端
 3. 從另一台裝置的瀏覽器輸入相同網址
 4. 點擊「Start Viewer」按鈕啟動觀看端
