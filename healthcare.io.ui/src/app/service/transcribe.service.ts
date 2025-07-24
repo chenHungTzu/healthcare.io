@@ -104,9 +104,9 @@ export class TranscribeService {
       this.isTranscribing = true;
 
       // 初始化音訊分析和合併
-      this.audioContext = new AudioContext({ sampleRate: 16000 });
+      this.audioContext = new AudioContext({ sampleRate: 16000 }); // 設定音訊採樣率為 16000Hz
       this.analyser = this.audioContext.createAnalyser();
-      this.analyser.fftSize = 512;
+      this.analyser.fftSize = 512;  // 時域樣本數
 
       // 創建音訊合併流
       this.transcribeStream = this.audioService.createCombinedAudioStream(localStream, remoteStream);
@@ -152,8 +152,22 @@ export class TranscribeService {
     const detectSound = () => {
       if (!this.soundDetectionActive) return;
 
+      // 快照音訊數據
       this.analyser.getByteTimeDomainData(dataArray);
 
+       // 🎵 音訊振幅與 Uint8Array 值的對應關係：
+      // ┌─────────────────────┬──────────────┬──────────────────┐
+      // │ 原始音訊振幅        │ Uint8Array值 │ 與128的偏差      │
+      // ├─────────────────────┼──────────────┼──────────────────┤
+      // │ +1.0 (最大正音量)   │     255      │ 偏差 = 127       │
+      // │  0.0 (靜音基準)     │     128      │ 偏差 = 0         │
+      // │ -1.0 (最大負音量)   │      0       │ 偏差 = 128       │
+      // └─────────────────────┴──────────────┴──────────────────┘
+      //
+      // 計算邏輯：Math.abs(dataArray[i] - 128)
+      // - 128 是靜音的基準點（零振幅）
+      // - 偏差值越大 = 音訊活動越明顯
+      // - 正負振幅都代表聲音活動，所以使用絕對值
       let total = 0;
       for (let i = 0; i < dataArray.length; i++) {
         total += Math.abs(dataArray[i] - 128);
