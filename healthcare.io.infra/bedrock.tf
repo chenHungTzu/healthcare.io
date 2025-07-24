@@ -207,7 +207,10 @@ resource "aws_db_subnet_group" "main" {
 }
 
 resource "aws_secretsmanager_secret" "aurora_secret" {
-  name = "BedrockUserSecret"
+  name                           = "BedrockUserSecret"
+  recovery_window_in_days        = 0
+  force_overwrite_replica_secret = true
+
 }
 
 resource "aws_secretsmanager_secret_version" "aurora_secret_value" {
