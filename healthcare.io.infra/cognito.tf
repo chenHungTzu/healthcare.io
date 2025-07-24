@@ -67,6 +67,14 @@ resource "aws_iam_role_policy" "kvs_sts_role_policy" {
           "transcribe:StartStreamTranscriptionWebSocket"
         ],
         Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "translate:TranslateText",
+          "translate:ListLanguages"
+        ]
+        Resource = "*"
       }
     ],
   })

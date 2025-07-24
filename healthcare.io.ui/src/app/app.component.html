@@ -14,8 +14,44 @@
   </div>
   }
 
+
+
+  <!-- 語言選擇清單 -->
+  @if(isLanguageOpen) {
+  <div class="language-panel">
+    <div class="language-header">
+      <h3>選擇轉錄語言</h3>
+      <button class="close-btn" (click)="this.isLanguageOpen = false">✕</button>
+    </div>
+
+    <div class="language-list">
+      @for(lang of transcribeLanguages; track lang.LanguageName) {
+      <div class="language-item" [class.selected]="selectedLanguageCode === lang.LanguageCode"
+        (click)="selectLanguage(lang.LanguageCode)">
+        <span class="language-name">{{ lang.LanguageName }}</span>
+        <span class="language-code">{{ lang.LanguageCode }}</span>
+        @if(selectedLanguageCode === lang.LanguageCode) {
+        <span class="check-icon">✓</span>
+        }
+      </div>
+      }
+    </div>
+  </div>
+  }
+
+
+  <!-- 語言選擇按鈕 -->
+  <div class="language-toggle-btn" (click)="this.isLanguageOpen = !this.isLanguageOpen" [class.active]="isLanguageOpen">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"
+        fill="white" />
+    </svg>
+  </div>
+
+
   <!-- 聊天按鈕 -->
-  <div class="chat-toggle-btn" (click)="toggleChat()" [class.active]="isChatOpen">
+  <div class="chat-toggle-btn" (click)="this.isChatOpen = !this.isChatOpen" [class.active]="isChatOpen">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
       <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" stroke="white"
         stroke-width="2" fill="none" />
@@ -34,7 +70,7 @@
         <button class="clear-btn" (click)="clearChat()" title="清除聊天記錄">
           🗑️
         </button>
-        <button class="close-btn" (click)="toggleChat()" title="關閉聊天室">
+        <button class="close-btn" (click)="this.isChatOpen = !this.isChatOpen" title="關閉聊天室">
           ✕
         </button>
       </div>
@@ -87,12 +123,7 @@
   }
 </div>
 
-@if(isUploading){
-<div class="spinner-container">
-  <span class="spinner"></span>
-  <span style="margin-left: 8px;">音檔上傳中...</span>
-</div>
-}
+
 
 <div class="controls">
   @if(mode == 'init'){
@@ -108,12 +139,3 @@
   }
   }
 </div>
-
-@if(isUploading){
-<div class="upload-mask">
-  <div class="spinner-container">
-    <span class="spinner"></span>
-    <span style="margin-left: 8px;">uploading...</span>
-  </div>
-</div>
-}
