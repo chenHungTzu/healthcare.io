@@ -1,8 +1,6 @@
 # Healthcare.io
 
-## 🔄 系統流程
-
-工作流程如下：
+## 🔄 系統架構
 
 ![系統架構流程圖](./img/flow.png)
 
@@ -140,9 +138,9 @@ task local-frontend-run
 7. 資料同步完畢後，可按下右下角「聊天」按鈕進行討論或往 AWS Bedrock Agent Console 進行 AI 問答測試
 
    > 🔥 上下文同步需要等 IngestJob 執行完畢，可能需要一點時間。
+   >
 
    ![AI 助理示範 - Call API](./img/chat.png)
-   
 8. (可選) 即時轉錄時可提供翻譯功能，點擊右邊「翻譯」按鈕
    ![翻譯選擇](./img/translate.png)
 9. 結果展示
