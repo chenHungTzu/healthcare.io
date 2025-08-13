@@ -154,15 +154,6 @@ export class AppComponent implements OnInit, DoCheck {
 
     this.setupConnectionStateHandler(peerConnection);
 
-    // 提前設定 DataChannel 監聽器，確保能接收到 Master 建立的通道
-    peerConnection.ondatachannel = (event) => {
-      console.log('🎉 Viewer: ondatachannel 被呼叫!', event.channel.label, 'readyState:', event.channel.readyState);
-      this.dataChannel = event.channel;
-      this.setupDataChannel(event.channel);
-    };
-
-    console.log('Viewer: ondatachannel 監聽器已設定');
-
     signalingClient.on('open', async () => {
       const viewerStream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 1280 }, height: { ideal: 720 } },
@@ -174,19 +165,20 @@ export class AppComponent implements OnInit, DoCheck {
 
       viewerStream.getTracks().forEach(track => peerConnection.addTrack(track, viewerStream));
 
-      // Viewer 端也建立 DataChannel（根據 AWS KVS 官方範例）
+            // Viewer 端也建立 DataChannel（根據 AWS KVS 官方範例）
       const viewerDataChannel = peerConnection.createDataChannel('kvsDataChannel');
       this.dataChannel = viewerDataChannel;
       this.setupDataChannel(viewerDataChannel);
-      console.log('Viewer: 主動建立 DataChannel');
 
       const offer = await peerConnection.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
       await peerConnection.setLocalDescription(offer);
 
-      console.log('Viewer: 發送 SDP Offer');
-      console.log('SDP Offer 內容:', offer.sdp);
-
       signalingClient.sendSdpOffer(peerConnection.localDescription as RTCSessionDescription);
+    });
+    signalingClient.on('sdpAnswer', async answer => {
+      await peerConnection.setRemoteDescription(answer);
+      // RTC 連線完成後自動啟動轉錄
+      console.log('Viewer: RTC 連線完成，啟動轉錄系統');
     });
     signalingClient.on('sdpAnswer', async answer => {
       console.log('Viewer: 收到 SDP Answer');
@@ -234,37 +226,26 @@ export class AppComponent implements OnInit, DoCheck {
 
     this.setupConnectionStateHandler(peerConnection);
 
-    // Master 端也設定 ondatachannel 監聽器（以防萬一）
+    // Master 端設定 ondatachannel 監聽器，接收 Viewer 建立的通道
     peerConnection.ondatachannel = (event) => {
-      console.log('Master: 意外收到 DataChannel:', event.channel.label);
+      console.log('DataChannel 連線已建立');
+      this.dataChannel = event.channel;
+      this.setupDataChannel(event.channel);
     };
 
     signalingClient.on('open', async () => {
-      console.log('Master: signalingClient opened');
-
       this.localStream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: true,
       });
       this.localView.nativeElement.srcObject = this.localStream;
       this.localStream.getTracks().forEach(track => peerConnection.addTrack(track, this.localStream));
-
-      // 在添加 tracks 後建立 DataChannel
-      this.dataChannel = peerConnection.createDataChannel('chat');
-      this.setupDataChannel(this.dataChannel);
-      console.log('Master: DataChannel 已建立，readyState:', this.dataChannel.readyState);
     });
     signalingClient.on('sdpOffer', async (offer, remoteClientId) => {
-      console.log('Master: 收到 SDP Offer');
-      console.log('SDP Offer 內容:', offer.sdp);
-
       remoteId = remoteClientId;
       await peerConnection.setRemoteDescription(offer);
       const answer = await peerConnection.createAnswer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
       await peerConnection.setLocalDescription(answer);
-
-      console.log('Master: 發送 SDP Answer');
-      console.log('SDP Answer 內容:', answer.sdp);
 
       signalingClient.sendSdpAnswer(peerConnection.localDescription as RTCSessionDescription, remoteId);
       // RTC 連線完成後自動啟動轉錄
@@ -386,12 +367,10 @@ export class AppComponent implements OnInit, DoCheck {
   private setupDataChannel(channel: RTCDataChannel) {
 
     channel.onopen = () => {
-      console.log('DataChannel opened - 可以開始發送訊息');
       this.showToast('連線已建立，可以開始對話', 2000);
     };
 
     channel.onclose = () => {
-      console.log('DataChannel closed - 連線已關閉');
       this.showToast('連線已斷開', 3000);
     };
 
@@ -400,23 +379,9 @@ export class AppComponent implements OnInit, DoCheck {
       this.showToast('連線發生錯誤', 3000);
     };
 
-    // 監聽連線狀態變化
-    const checkConnectionState = () => {
-      console.log('DataChannel readyState:', channel.readyState);
-    };
-
-    // 定期檢查連線狀態（可選）
-    const stateInterval = setInterval(() => {
-      if (channel.readyState === 'closed') {
-        clearInterval(stateInterval);
-      }
-      checkConnectionState();
-    }, 5000);
-
     channel.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log('收到 DataChannel 訊息:', data);
 
         // 新增對方訊息到病人聊天室
         const msg = {
@@ -494,7 +459,6 @@ export class AppComponent implements OnInit, DoCheck {
    */
   selectTranscribeLanguage(languageCode: string) {
     this.selectedTranscribeLanguage = languageCode;
-    console.log('轉錄語言設定為:', languageCode);
     this.transcribeService.setTranscribeLanguage(languageCode);
     this.translateService.setTranscribeLanguage(languageCode);
   }
@@ -505,7 +469,6 @@ export class AppComponent implements OnInit, DoCheck {
    */
   selectTranslateLanguage(languageCode: string) {
     this.selectedTranslateLanguage = languageCode;
-    console.log('翻譯語言設定為:', languageCode);
     this.translateService.setTranslateLanguage(languageCode);
   }
 
@@ -548,31 +511,24 @@ export class AppComponent implements OnInit, DoCheck {
         case 'open':
           try {
             this.dataChannel.send(JSON.stringify(msg));
-            console.log('訊息已透過 DataChannel 發送');
           } catch (error) {
             console.error('DataChannel 發送訊息失敗:', error);
             this.showToast('發送訊息失敗，請檢查連線狀態', 3000);
           }
           break;
         case 'connecting':
-          console.log('DataChannel 正在連接中，訊息將稍後發送');
           this.showToast('正在建立連線，請稍候再試', 2000);
-          // 可以選擇將訊息加入佇列，等連線建立後再發送
           break;
         case 'closing':
-          console.warn('DataChannel 正在關閉中');
           this.showToast('連線正在關閉，無法發送訊息', 3000);
           break;
         case 'closed':
-          console.warn('DataChannel 已關閉');
           this.showToast('連線已斷開，請重新建立連線', 3000);
           break;
         default:
-          console.warn('DataChannel 狀態未知:', this.dataChannel.readyState);
           this.showToast('連線狀態異常，請重新建立連線', 3000);
       }
     } else {
-      console.warn('DataChannel 尚未建立');
       this.showToast('連線尚未建立，請先建立 WebRTC 連線', 3000);
     }
   }
