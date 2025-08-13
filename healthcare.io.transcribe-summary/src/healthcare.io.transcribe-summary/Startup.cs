@@ -1,4 +1,3 @@
-
 using Amazon.Lambda.Annotations;
 using healthcare.io.DI;
 using Microsoft.Extensions.Configuration;

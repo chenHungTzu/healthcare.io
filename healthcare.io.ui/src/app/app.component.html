@@ -84,8 +84,26 @@
   </div>
 
 
-  <!-- 聊天按鈕 -->
+  <!-- 聊天按鈕群組：橫向排列，位於語言切換按鈕上方 -->
+  <!-- <div class="chat-btn-row"> -->
+  <!-- AI 助理聊天按鈕（含未讀 badge） -->
   <div class="chat-toggle-btn" (click)="this.isChatOpen = !this.isChatOpen" [class.active]="isChatOpen">
+
+
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="6" width="18" height="12" rx="3" stroke="white" stroke-width="2" fill="none" />
+      <circle cx="8" cy="12" r="1.5" fill="white" />
+      <circle cx="16" cy="12" r="1.5" fill="white" />
+    </svg>
+    @if(unreadCount > 0){
+    <span class="chat-badge">
+      {{ unreadCount > 99 ? '99+' : unreadCount }}
+    </span>
+    }
+  </div>
+  <!-- 病人聊天按鈕（新功能） -->
+  <div class="chat-toggle-btn orange" (click)="isPatientChatOpen = !isPatientChatOpen"
+    [class.active]="isPatientChatOpen">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
       <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" stroke="white"
         stroke-width="2" fill="none" />
@@ -93,59 +111,87 @@
       <circle cx="12" cy="10" r="1" fill="white" />
       <circle cx="16" cy="10" r="1" fill="white" />
     </svg>
+    @if(patientUnreadCount > 0){
+    <span class="chat-badge">
+      {{ patientUnreadCount > 99 ? '99+' : patientUnreadCount }}
+    </span>
+    }
   </div>
+  <!-- </div> -->
 
-  <!-- 聊天室 -->
+  <!-- AI 助理聊天室 -->
   @if(isChatOpen) {
   <div class="chat-panel">
     <div class="chat-header">
       <h3>AI 醫療助理</h3>
       <div class="chat-actions">
-        <button class="clear-btn" (click)="clearChat()" title="清除聊天記錄">
-          🗑️
-        </button>
-        <button class="close-btn" (click)="this.isChatOpen = !this.isChatOpen" title="關閉聊天室">
-          ✕
-        </button>
+        <button class="clear-btn" (click)="clearChat()" title="清除聊天記錄">🗑️</button>
+        <button class="close-btn" (click)="this.isChatOpen = !this.isChatOpen" title="關閉聊天室">✕</button>
       </div>
     </div>
-
     <div class="chat-messages">
       @if(chatMessages.length === 0) {
-      <div class="welcome-message">
-        👋 您好！我是您的 AI 醫療助理，有什麼我可以幫助您的嗎？
-      </div>
+      <div class="welcome-message">👋 您好！我是您的 AI 醫療助理，有什麼我可以幫助您的嗎？</div>
       }
-
       @for(message of chatMessages; track message.id) {
       <div class="message" [class.user]="message.isUser" [class.ai]="!message.isUser">
         <div class="message-content">
           <div class="message-text">{{ message.text }}</div>
-          <div class="message-time">
-            {{ message.timestamp | date:'HH:mm' }}
-          </div>
+          <div class="message-time">{{ message.timestamp | date:'HH:mm' }}</div>
         </div>
       </div>
       }
-
       @if(isLoadingMessage) {
       <div class="message ai">
         <div class="message-content">
-          <div class="typing-indicator">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
+          <div class="typing-indicator"><span></span><span></span><span></span></div>
         </div>
       </div>
       }
     </div>
-
     <div class="chat-input-container">
       <div class="chat-input">
         <textarea [(ngModel)]="currentMessage" (keydown)="onKeyPress($event)" placeholder="輸入您的問題..." rows="2"
           [disabled]="isLoadingMessage"></textarea>
         <button class="send-btn" (click)="sendMessage()" [disabled]="!currentMessage.trim() || isLoadingMessage">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="m22 2-20 10 20 10V2z" stroke="currentColor" stroke-width="2" fill="none" />
+            <path d="M22 2 11 13" stroke="currentColor" stroke-width="2" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- 病人聊天室（新功能） -->
+  @if(isPatientChatOpen) {
+  <div class="chat-panel patient">
+    <div class="chat-header">
+      <h3>與病人聊天</h3>
+      <div class="chat-actions">
+        <button class="clear-btn" (click)="clearPatientChat()" title="清除聊天記錄">🗑️</button>
+        <button class="close-btn" (click)="isPatientChatOpen = !isPatientChatOpen" title="關閉聊天室">✕</button>
+      </div>
+    </div>
+    <div class="chat-messages">
+      @if(patientChatMessages?.length === 0) {
+      <div class="welcome-message">🩺 這裡是與病人的即時聊天。</div>
+      }
+      @for(msg of patientChatMessages; track msg.id) {
+      <div class="message" [class.user]="msg.isUser" [class.ai]="!msg.isUser">
+        <div class="message-content">
+          <div class="message-text">{{ msg.text }}</div>
+          <div class="message-time">{{ msg.timestamp | date:'HH:mm' }}</div>
+        </div>
+      </div>
+      }
+    </div>
+    <div class="chat-input-container">
+      <div class="chat-input">
+        <textarea [(ngModel)]="patientCurrentMessage" (keydown)="onPatientKeyPress($event)" placeholder="輸入訊息..."
+          rows="2"></textarea>
+        <button class="send-btn" (click)="sendPatientMessage()" [disabled]="!patientCurrentMessage.trim()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path d="m22 2-20 10 20 10V2z" stroke="currentColor" stroke-width="2" fill="none" />
             <path d="M22 2 11 13" stroke="currentColor" stroke-width="2" />

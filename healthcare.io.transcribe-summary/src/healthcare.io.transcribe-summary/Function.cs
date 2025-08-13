@@ -285,40 +285,6 @@ public class Function
         return bedrockResponse?.Results?.FirstOrDefault()?.OutputText ?? summaryContent;
     }
 
-    private async Task<string> TestBedrockAgent(string sessionId, string message)
-    {
-        try
-        {
-            
-            var response = await _amazonBedrockAgentRuntime.InvokeAgentAsync(new InvokeAgentRequest
-            {
-                AgentId = "FJOAIEOHQI",
-                AgentAliasId = "TUGCBDUGEX",
-                SessionId = sessionId,
-                InputText = message
-            });
-
-            var sb = new StringBuilder();
-     
-            // 正確方式：透過 response.Completion 取得資料
-            await foreach (var item in response.Completion)
-            {
-                if (item is Amazon.BedrockAgentRuntime.Model.PayloadPart payloadPart)
-                {
-                    var chunk = Encoding.UTF8.GetString(payloadPart.Bytes.ToArray());
-                    sb.Append(chunk);
-                }
-            }
-
-            return sb.ToString();
-        }
-        catch (Exception ex)
-        {
-            return $"Error invoking Bedrock Agent: {ex.Message}";
-        }
-
-    }
-
     private async Task SyncBedrockKnowledgeBase()
     {
 

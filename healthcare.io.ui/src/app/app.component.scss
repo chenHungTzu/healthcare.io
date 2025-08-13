@@ -1,3 +1,85 @@
+@media (max-width: 480px) {
+  .chat-toggle-btn {
+    bottom: 16px;
+    right: 16px;
+    width: 50px;
+    height: 50px;
+
+    &.orange {
+      bottom: 132px; // 小螢幕下橘色按鈕間距
+    }
+
+    svg {
+      width: 22px;
+      height: 22px;
+    }
+  }
+}
+
+// 語言切換按鈕，樣式與聊天按鈕一致但 bottom 不同
+.language-toggle-btn {
+  position: fixed;
+  bottom: 132px; // 比 chat-toggle-btn 再高一點
+  width: 56px;
+  height: 56px;
+  background: #4caf50;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  transition: all 0.3s ease;
+  z-index: 1000;
+  border: none;
+
+  &:hover {
+    background: #388e3c;
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+  }
+
+  &.active {
+    background: #388e3c;
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+  }
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+// 聊天按鈕群組橫向排列，置於右上角語言切換按鈕上方
+.chat-btn-row {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1001;
+}
+
+// 聊天按鈕右上角紅色 badge 樣式
+.chat-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  background: #e53935;
+  color: #fff;
+  border-radius: 9px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  z-index: 2;
+  box-shadow: 0 0 2px #000;
+}
+
 // 基礎全域樣式重置
 * {
   box-sizing: border-box;
@@ -43,10 +125,8 @@ html {
 // 聊天按鈕 - 響應式設計
 .chat-toggle-btn {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 56px;
-  height: 56px;
+  width: 50px;
+  height: 50px;
   background: #2196F3;
   border-radius: 50%;
   display: flex;
@@ -57,6 +137,19 @@ html {
   transition: all 0.3s ease;
   z-index: 1000;
   border: none;
+  bottom: 20px;
+  right: 17px;
+
+  &.orange {
+    background: #ff9800;
+    bottom: 132px; // 與藍色按鈕間隔一個按鈕寬
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+
+    &:hover {
+      background: #f57c00;
+      box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+    }
+  }
 
   &:hover {
     background: #1976D2;
@@ -64,11 +157,11 @@ html {
     box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
   }
 
-  &.active {
-    opacity: 0;
-    visibility: hidden;
-    transform: scale(0);
-  }
+  // &.active {
+  //   opacity: 0;
+  //   visibility: hidden;
+  //   transform: scale(0);
+  // }
 
   svg {
     width: 24px;
@@ -525,8 +618,12 @@ html {
   .chat-toggle-btn {
     bottom: 16px;
     right: 16px;
-    width: 52px;
-    height: 52px;
+    width: 50px;
+    height: 50px;
+
+    &.orange {
+      bottom: 132px; // 小螢幕下橘色按鈕間距
+    }
 
     svg {
       width: 22px;
@@ -604,8 +701,11 @@ html {
 // 平板直向 (481px - 768px)
 @media (min-width: 481px) and (max-width: 768px) {
   .chat-toggle-btn {
-    bottom: 24px;
-    right: 24px;
+    bottom: 25px;
+
+    &.orange {
+      bottom: 128px; // 平板下橘色按鈕間距
+    }
   }
 
   .controls {
@@ -658,6 +758,7 @@ html {
   }
 }
 
+
 // 大螢幕桌機 (1025px+)
 @media (min-width: 1025px) {
   .video-container {
@@ -673,6 +774,10 @@ html {
     right: 32px;
     width: 64px;
     height: 64px;
+
+    &.orange {
+      bottom: 168px; // 桌機下橘色按鈕間距
+    }
 
     &:hover {
       transform: scale(1.1);
