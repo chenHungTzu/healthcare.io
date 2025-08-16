@@ -24,16 +24,9 @@ import { Language } from '@aws-sdk/client-translate';
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent implements OnInit, DoCheck {
-  ngOnInit(): void {
-    // 可放初始化邏輯
-  }
+export class AppComponent {
 
-  ngDoCheck(): void {
-    if (this.isChatOpen && this.unreadCount > 0) {
-      this.unreadCount = 0;
-    }
-  }
+
   /** 遠端視訊元素參考 */
   @ViewChild("remoteView", { static: true }) remoteView: ElementRef = new ElementRef(null);
   /** 本地視訊元素參考 */
@@ -85,7 +78,8 @@ export class AppComponent implements OnInit, DoCheck {
   // 病人聊天相關
   public isPatientChatOpen: boolean = false;
   public patientUnreadCount: number = 0;
-  public patientChatMessages: Array<{ id: string; text: string; isUser: boolean; timestamp: Date }> = [];
+
+  public patientChatMessages: Array<ChatMessage> = [];
   public patientCurrentMessage: string = '';
 
   // 轉錄語言選項（支援的語音識別語言）
@@ -165,7 +159,6 @@ export class AppComponent implements OnInit, DoCheck {
 
       viewerStream.getTracks().forEach(track => peerConnection.addTrack(track, viewerStream));
 
-            // Viewer 端也建立 DataChannel（根據 AWS KVS 官方範例）
       const viewerDataChannel = peerConnection.createDataChannel('kvsDataChannel');
       this.dataChannel = viewerDataChannel;
       this.setupDataChannel(viewerDataChannel);
@@ -177,16 +170,9 @@ export class AppComponent implements OnInit, DoCheck {
     });
     signalingClient.on('sdpAnswer', async answer => {
       await peerConnection.setRemoteDescription(answer);
-      // RTC 連線完成後自動啟動轉錄
-      console.log('Viewer: RTC 連線完成，啟動轉錄系統');
     });
     signalingClient.on('sdpAnswer', async answer => {
-      console.log('Viewer: 收到 SDP Answer');
-      console.log('SDP Answer 內容:', answer.sdp);
-
       await peerConnection.setRemoteDescription(answer);
-      // RTC 連線完成後自動啟動轉錄
-      console.log('Viewer: RTC 連線完成，啟動轉錄系統');
       await this.transcribeService.startTranscription(this.localStream, this.remoteStream);
     });
     signalingClient.on('iceCandidate', candidate => {
@@ -228,7 +214,6 @@ export class AppComponent implements OnInit, DoCheck {
 
     // Master 端設定 ondatachannel 監聽器，接收 Viewer 建立的通道
     peerConnection.ondatachannel = (event) => {
-      console.log('DataChannel 連線已建立');
       this.dataChannel = event.channel;
       this.setupDataChannel(event.channel);
     };
@@ -248,8 +233,6 @@ export class AppComponent implements OnInit, DoCheck {
       await peerConnection.setLocalDescription(answer);
 
       signalingClient.sendSdpAnswer(peerConnection.localDescription as RTCSessionDescription, remoteId);
-      // RTC 連線完成後自動啟動轉錄
-      console.log('Master: RTC 連線完成，啟動轉錄系統');
       await this.transcribeService.startTranscription(this.localStream, this.remoteStream);
     });
     signalingClient.on('iceCandidate', candidate => {
@@ -327,38 +310,61 @@ export class AppComponent implements OnInit, DoCheck {
   async sendMessage() {
     if (!this.currentMessage.trim() || this.isLoadingMessage) return;
 
+    const patientChatHistories = this.patientChatMessages.filter(msg => msg.isUser)
+      .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+    const patientHistoryTexts = patientChatHistories.map(data => `${data.role}:${data.text}`).join('\n');
+
+    const messageToSendWithHistory = `
+    請參考醫生與病人過往的聊天歷程：
+    \n${patientHistoryTexts}\n
+    我的問題是：${this.currentMessage}
+    `;
+
+
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       text: this.currentMessage,
       isUser: true,
-      timestamp: new Date()
+      isMe: true,
+      timestamp: new Date(),
+      role: this.mode == 'viewer' ? 'patient' : 'doctor'
     };
     this.chatMessages.push(userMessage);
-    const messageToSend = this.currentMessage;
+
     this.currentMessage = '';
     this.isLoadingMessage = true;
 
     try {
-      const response = await this.chatbotService.SendMessage(messageToSend, this.sessionId);
+      const response = await this.chatbotService.SendMessage(messageToSendWithHistory, this.sessionId);
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         text: response || '抱歉，我暫時無法回應。',
         isUser: false,
-        timestamp: new Date()
+        isMe: false,
+        timestamp: new Date(),
+
       };
       this.chatMessages.push(aiMessage);
+
+      if (!this.isChatOpen) {
+        this.unreadCount++;
+      }
+
     } catch (error) {
       console.error('發送訊息失敗:', error);
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         text: '抱歉，發送訊息時發生錯誤，請稍後再試。',
         isUser: false,
-        timestamp: new Date()
+        isMe: false,
+        timestamp: new Date(),
+
       };
       this.chatMessages.push(errorMessage);
     } finally {
       this.isLoadingMessage = false;
-      setTimeout(() => this.scrollToBottom(), 100);
+      this.scrollToBottom()
     }
   }
   /**
@@ -381,14 +387,15 @@ export class AppComponent implements OnInit, DoCheck {
 
     channel.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data);
+        const data = JSON.parse(event.data) as ChatMessage;
 
-        // 新增對方訊息到病人聊天室
-        const msg = {
+        const msg: ChatMessage = {
           id: Date.now().toString(),
           text: data.text,
-          isUser: false,  // 對方的訊息
-          timestamp: new Date()
+          isUser: data.isUser,
+          timestamp: new Date(),
+          role: data.role,
+          isMe: false,
         };
 
         this.patientChatMessages.push(msg);
@@ -397,8 +404,7 @@ export class AppComponent implements OnInit, DoCheck {
         if (!this.isPatientChatOpen) {
           this.patientUnreadCount++;
         }
-
-        setTimeout(() => this.scrollToBottom(), 100);
+        this.scrollToBottom()
       } catch (e) {
         console.error('DataChannel message parse error', e);
       }
@@ -450,6 +456,7 @@ export class AppComponent implements OnInit, DoCheck {
    */
   clearChat() {
     this.chatMessages = [];
+    this.unreadCount = 0;
     this.sessionId = this.generateSessionId();
   }
 
@@ -494,43 +501,25 @@ export class AppComponent implements OnInit, DoCheck {
   public sendPatientMessage(): void {
     if (!this.patientCurrentMessage.trim()) return;
 
-    const msg = {
+    const msg: ChatMessage = {
       id: Date.now().toString(),
       text: this.patientCurrentMessage,
       isUser: true,
-      timestamp: new Date()
+      timestamp: new Date(),
+      isMe: true,
+      role: this.mode == 'viewer' ? 'patient' : 'doctor'
     };
 
     this.patientChatMessages.push(msg);
     this.patientCurrentMessage = '';
-    setTimeout(() => this.scrollToBottom(), 100);
 
-    // 透過 WebRTC DataChannel 傳送訊息給對方
-    if (this.dataChannel) {
-      switch (this.dataChannel.readyState) {
-        case 'open':
-          try {
-            this.dataChannel.send(JSON.stringify(msg));
-          } catch (error) {
-            console.error('DataChannel 發送訊息失敗:', error);
-            this.showToast('發送訊息失敗，請檢查連線狀態', 3000);
-          }
-          break;
-        case 'connecting':
-          this.showToast('正在建立連線，請稍候再試', 2000);
-          break;
-        case 'closing':
-          this.showToast('連線正在關閉，無法發送訊息', 3000);
-          break;
-        case 'closed':
-          this.showToast('連線已斷開，請重新建立連線', 3000);
-          break;
-        default:
-          this.showToast('連線狀態異常，請重新建立連線', 3000);
-      }
-    } else {
-      this.showToast('連線尚未建立，請先建立 WebRTC 連線', 3000);
+    try {
+      this.dataChannel.send(JSON.stringify(msg));
+    } catch (error) {
+      console.error(error);
+      this.showToast('發送訊息失敗，請檢查連線狀態', 3000);
     }
+    this.scrollToBottom();
   }
 
   public onPatientKeyPress(event: KeyboardEvent): void {
@@ -540,5 +529,19 @@ export class AppComponent implements OnInit, DoCheck {
       this.sendPatientMessage();
       this.scrollToBottom();
     }
+  }
+
+  public openPatientChat() {
+    this.isPatientChatOpen = !this.isPatientChatOpen;
+    this.isChatOpen = false;
+    this.patientUnreadCount = 0;
+    this.scrollToBottom();
+  }
+
+  public openChat() {
+    this.isChatOpen = !this.isChatOpen;
+    this.isPatientChatOpen = false;
+    this.unreadCount = 0;
+    this.scrollToBottom();
   }
 }
